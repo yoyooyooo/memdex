@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.DS_Store
+
+.codebase-retrieve/state.local.json
+.codebase-retrieve/pending-upload.local.json
+.codebase-retrieve/cache/
+.codebase-retrieve/.lock
+
+dist/
+build/
+*.egg-info/
