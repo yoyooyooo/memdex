@@ -1,5 +1,7 @@
 # codebase-retrieve
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 Agent-facing codebase semantic retrieval using NotebookLM, repomix snapshots,
 freshness checks, and local line verification.
 
