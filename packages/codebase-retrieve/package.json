@@ -7,7 +7,7 @@
   "homepage": "https://github.com/yoyooyooo/codebase-retrieve#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yoyooyooo/codebase-retrieve.git",
+    "url": "git+https://github.com/yoyooyooo/codebase-retrieve.git",
     "directory": "packages/codebase-retrieve"
   },
   "bugs": {
@@ -22,7 +22,7 @@
     "semantic-search"
   ],
   "bin": {
-    "codebase-retrieve": "./bin/codebase-retrieve.js"
+    "codebase-retrieve": "bin/codebase-retrieve.js"
   },
   "files": [
     "bin/codebase-retrieve.js",
