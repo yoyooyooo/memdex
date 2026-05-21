@@ -36,6 +36,10 @@ cbr--<YYMMDDHHmm>--<group>--<chunk>--<hash>.md
 The title is for human routing and recovery. The notebook ID in
 `.codebase-retrieve/config.json` is still the authority for CLI calls.
 
+The `codebase-retrieve` CLI is distributed from the npm package under
+`packages/codebase-retrieve`. From this monorepo, use `bun run cbr -- <args>`.
+When installed as a package, use `codebase-retrieve <args>`.
+
 If `notebooklm` is missing, install it persistently before init:
 
 ```bash
@@ -45,9 +49,9 @@ uv tool install git+https://github.com/teng-lin/notebooklm-py.git
 Init options:
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init --repo . --create-notebook
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init --repo . --reuse-existing-notebook
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init --repo . --notebook-id <id>
+codebase-retrieve init --repo . --create-notebook
+codebase-retrieve init --repo . --reuse-existing-notebook
+codebase-retrieve init --repo . --notebook-id <id>
 ```
 
 `--create-notebook` first reuses an exact title match, then creates a new
@@ -139,12 +143,12 @@ Use `temp-source` for derived materials such as flashcard seeds that should live
 in the same NotebookLM notebook but not become part of the repo index:
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py temp-source upload --repo . \
+codebase-retrieve temp-source upload --repo . \
   --kind notes --title retry-design --file /tmp/retry-design.md \
   --origin-chunk packages/001 --origin-file packages/billing/src/retry.ts
 
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py temp-source list --repo .
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py temp-source cleanup --repo . --kind notes --yes
+codebase-retrieve temp-source list --repo .
+codebase-retrieve temp-source cleanup --repo . --kind notes --yes
 ```
 
 Temporary source titles use:
@@ -164,7 +168,7 @@ passes `--include-untracked-prefix --yes`.
 Use `ask` for broad repo questions:
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask --repo . \
+codebase-retrieve ask --repo . \
   "Which docs define retry and backoff behavior?"
 ```
 
@@ -187,7 +191,7 @@ from contaminating retrieval.
 Use `locate` when the user asks for code files, functions, tests, or line refs:
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py locate --repo . \
+codebase-retrieve locate --repo . \
   "where is invoice export retry implemented?"
 ```
 

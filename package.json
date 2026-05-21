@@ -1,0 +1,14 @@
+{
+  "name": "codebase-retrieve-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.2.17",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "cbr": "bun packages/codebase-retrieve/bin/codebase-retrieve.js",
+    "check": "cd packages/codebase-retrieve && bun run check",
+    "test": "cd packages/codebase-retrieve && bun run test"
+  }
+}

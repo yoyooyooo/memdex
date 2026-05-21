@@ -7,8 +7,9 @@ Thanks for helping improve `codebase-retrieve`.
 Run the local test suite before sending changes:
 
 ```bash
-python3 skills/codebase-retrieve/tests/test_codebase_retrieve_cli.py
-python3 -m py_compile skills/codebase-retrieve/scripts/codebase-retrieve.py
+bun install
+bun run test
+bun run check
 ```
 
 The control-plane script should stay Python-stdlib-only. External tools may be

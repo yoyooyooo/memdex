@@ -4,6 +4,7 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 .DS_Store
+node_modules/
 
 .codebase-retrieve/state.local.json
 .codebase-retrieve/pending-upload.local.json

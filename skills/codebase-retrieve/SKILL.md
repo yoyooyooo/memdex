@@ -11,17 +11,21 @@ Use this skill when a repository should behave like a semantic knowledge base.
 It wraps a provider such as NotebookLM with a project-local config, reproducible
 repomix bundle, TTL refresh, and local file/line verification.
 
-Prerequisite: `notebooklm` must be a persistent CLI on PATH. If missing, run:
+Prerequisites:
+
+- `codebase-retrieve` CLI must be on PATH. In this monorepo, use
+  `bun run cbr -- <args>`; installed npm packages provide `codebase-retrieve`.
+- `notebooklm` must be a persistent CLI on PATH. If missing, run:
 
 ```bash
 uv tool install git+https://github.com/teng-lin/notebooklm-py.git
 ```
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init --repo . --create-notebook
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask --repo . "Where is reconnect/backfill implemented?"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py locate --repo . "invoice export retry command"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py pack --repo . --dry-run
+codebase-retrieve init --repo . --create-notebook
+codebase-retrieve ask --repo . "Where is reconnect/backfill implemented?"
+codebase-retrieve locate --repo . "invoice export retry command"
+codebase-retrieve pack --repo . --dry-run
 ```
 
 If the skill is installed outside this repository layout, run the copied script
@@ -56,25 +60,25 @@ freshness metadata.
 ## Commands
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init --repo .
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init --repo . --create-notebook
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init --repo . --reuse-existing-notebook
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask --repo . "question"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask --repo . --yes "question"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask --repo . --verbose "question"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask --repo . --json "question"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py locate --repo . "thing to find"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py locate --repo . --verbose "thing to find"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py locate --repo . --json "thing to find"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py pack --repo . --dry-run
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py pack --repo . --dry-run --json
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py pack --repo . --dry-run --include-files --json
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py temp-source upload --repo . --kind notes --title retry-design --file /tmp/source.md
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py temp-source list --repo .
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py temp-source cleanup --repo . --kind notes --yes
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py status --repo .
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ensure --repo . --yes
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py refresh --repo . --force
+codebase-retrieve init --repo .
+codebase-retrieve init --repo . --create-notebook
+codebase-retrieve init --repo . --reuse-existing-notebook
+codebase-retrieve ask --repo . "question"
+codebase-retrieve ask --repo . --yes "question"
+codebase-retrieve ask --repo . --verbose "question"
+codebase-retrieve ask --repo . --json "question"
+codebase-retrieve locate --repo . "thing to find"
+codebase-retrieve locate --repo . --verbose "thing to find"
+codebase-retrieve locate --repo . --json "thing to find"
+codebase-retrieve pack --repo . --dry-run
+codebase-retrieve pack --repo . --dry-run --json
+codebase-retrieve pack --repo . --dry-run --include-files --json
+codebase-retrieve temp-source upload --repo . --kind notes --title retry-design --file /tmp/source.md
+codebase-retrieve temp-source list --repo .
+codebase-retrieve temp-source cleanup --repo . --kind notes --yes
+codebase-retrieve status --repo .
+codebase-retrieve ensure --repo . --yes
+codebase-retrieve refresh --repo . --force
 ```
 
 Command responsibilities:

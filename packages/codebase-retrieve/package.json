@@ -1,0 +1,24 @@
+{
+  "name": "@yoyooyooo/codebase-retrieve",
+  "version": "0.1.0",
+  "description": "Agent-facing codebase semantic retrieval using NotebookLM, repomix snapshots, freshness checks, and local line verification.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "codebase-retrieve": "./bin/codebase-retrieve.js"
+  },
+  "files": [
+    "bin/",
+    "LICENSE",
+    "scripts/",
+    "README.md"
+  ],
+  "scripts": {
+    "codebase-retrieve": "bun ./bin/codebase-retrieve.js",
+    "check": "python3 -m py_compile scripts/codebase-retrieve.py && python3 tests/test_codebase_retrieve_cli.py",
+    "test": "python3 tests/test_codebase_retrieve_cli.py"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

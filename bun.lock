@@ -1,0 +1,18 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "codebase-retrieve-monorepo",
+    },
+    "packages/codebase-retrieve": {
+      "name": "@yoyooyooo/codebase-retrieve",
+      "version": "0.1.0",
+      "bin": {
+        "codebase-retrieve": "./bin/codebase-retrieve.js",
+      },
+    },
+  },
+  "packages": {
+    "@yoyooyooo/codebase-retrieve": ["@yoyooyooo/codebase-retrieve@workspace:packages/codebase-retrieve"],
+  }
+}

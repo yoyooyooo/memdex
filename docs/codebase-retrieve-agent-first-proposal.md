@@ -28,8 +28,8 @@ status -> ensure -> ask / locate
 默认入口：
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask --repo . "question"
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py locate --repo . "thing to find"
+codebase-retrieve ask --repo . "question"
+codebase-retrieve locate --repo . "thing to find"
 ```
 
 `status` / `ensure` / `refresh` 不删除，但下沉为维护命令：
@@ -281,8 +281,8 @@ status/ensure 不再出现在默认问答路径。
 落地文件：
 
 ```text
-skills/codebase-retrieve/scripts/codebase-retrieve.py
-skills/codebase-retrieve/tests/test_codebase_retrieve_cli.py
+packages/codebase-retrieve/scripts/codebase-retrieve.py
+packages/codebase-retrieve/tests/test_codebase_retrieve_cli.py
 skills/codebase-retrieve/SKILL.md
 skills/codebase-retrieve/references/workflow.md
 ```

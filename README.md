@@ -39,6 +39,7 @@ This project combines both:
 - Incremental chunk uploads with stable whole-file chunk planning.
 - Source cleanup limited to NotebookLM source IDs recorded by this tool.
 - Temporary NotebookLM sources for derived material such as notes or study aids.
+- npm package with a `codebase-retrieve` CLI.
 - Codex/OpenAI-style skill files under `skills/`.
 
 ## How It Works
@@ -59,17 +60,19 @@ should call `ask` or `locate` directly.
 ## Repository Layout
 
 ```text
-skills/codebase-retrieve/   Codebase retrieval skill and CLI
+packages/codebase-retrieve/ npm package and CLI implementation
+skills/codebase-retrieve/   Agent skill for codebase retrieval
 skills/notebooklm/          Supporting NotebookLM automation guidance
 docs/                       Design notes and rationale
 ```
 
-The CLI entry point is:
+From this monorepo checkout, use the Bun workspace script:
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py
+bun run cbr -- --help
 ```
 
+When installed as an npm package, the CLI command is `codebase-retrieve`.
 If you wrap or relocate the script, set `CODEBASE_RETRIEVE_CMD` so generated
 next-step commands point at your wrapper.
 
@@ -94,7 +97,7 @@ notebooklm auth check --test
 Initialize a target repository:
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init \
+bun run cbr -- init \
   --repo /path/to/repo \
   --create-notebook
 ```
@@ -102,7 +105,7 @@ python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init \
 Ask an architecture or documentation question:
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask \
+bun run cbr -- ask \
   --repo /path/to/repo \
   "Where is retry/backfill documented?"
 ```
@@ -110,7 +113,7 @@ python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask \
 Locate likely implementation files and line refs:
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py locate \
+bun run cbr -- locate \
   --repo /path/to/repo \
   "invoice export retry command"
 ```
@@ -119,7 +122,7 @@ First broad upload is intentionally blocked unless approved. After reviewing
 the source scope, rerun with `--yes`:
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask \
+bun run cbr -- ask \
   --repo /path/to/repo \
   --yes \
   "Where is retry/backfill documented?"
@@ -167,8 +170,9 @@ terms and for uploading only content they are allowed to process in NotebookLM.
 Run the local checks:
 
 ```bash
-python3 skills/codebase-retrieve/tests/test_codebase_retrieve_cli.py
-python3 -m py_compile skills/codebase-retrieve/scripts/codebase-retrieve.py
+bun install
+bun run test
+bun run check
 ```
 
 The control plane intentionally depends only on the Python standard library.

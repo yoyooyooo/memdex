@@ -35,6 +35,7 @@ NotebookLM 能找到相关概念和可能的文件，但回答可能滞后，也
 - 增量 chunk 上传，保持稳定的 whole-file chunk 规划。
 - 只清理由本工具记录的 NotebookLM source ID。
 - 支持临时 NotebookLM source，用于笔记、学习材料等派生内容。
+- 提供带 `codebase-retrieve` CLI 的 npm package。
 - `skills/` 下提供 Codex/OpenAI 风格 skill 文件。
 
 ## 工作方式
@@ -54,19 +55,20 @@ repo checkout
 ## 仓库结构
 
 ```text
-skills/codebase-retrieve/   Codebase retrieval skill 和 CLI
+packages/codebase-retrieve/ npm package 和 CLI 实现
+skills/codebase-retrieve/   Codebase retrieval agent skill
 skills/notebooklm/          NotebookLM 自动化辅助说明
 docs/                       设计说明和决策背景
 ```
 
-CLI 入口：
+在 monorepo checkout 中，使用 Bun workspace script：
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py
+bun run cbr -- --help
 ```
 
-如果你包装或移动了脚本，可设置 `CODEBASE_RETRIEVE_CMD`，让工具生成的下一步命令
-指向你的 wrapper。
+通过 npm package 安装后，CLI 命令是 `codebase-retrieve`。如果你包装或移动了脚本，
+可设置 `CODEBASE_RETRIEVE_CMD`，让工具生成的下一步命令指向你的 wrapper。
 
 ## 环境要求
 
@@ -89,7 +91,7 @@ notebooklm auth check --test
 初始化目标仓库：
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init \
+bun run cbr -- init \
   --repo /path/to/repo \
   --create-notebook
 ```
@@ -97,7 +99,7 @@ python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py init \
 询问架构或文档问题：
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask \
+bun run cbr -- ask \
   --repo /path/to/repo \
   "Where is retry/backfill documented?"
 ```
@@ -105,7 +107,7 @@ python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask \
 定位可能的实现文件和本地行号：
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py locate \
+bun run cbr -- locate \
   --repo /path/to/repo \
   "invoice export retry command"
 ```
@@ -113,7 +115,7 @@ python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py locate \
 首次 broad upload 默认会被阻止。确认 source scope 后，用 `--yes` 显式批准：
 
 ```bash
-python3 ./skills/codebase-retrieve/scripts/codebase-retrieve.py ask \
+bun run cbr -- ask \
   --repo /path/to/repo \
   --yes \
   "Where is retry/backfill documented?"
@@ -157,8 +159,9 @@ NotebookLM。Google 可能随时改变 NotebookLM 行为、限制、认证或内
 运行本地检查：
 
 ```bash
-python3 skills/codebase-retrieve/tests/test_codebase_retrieve_cli.py
-python3 -m py_compile skills/codebase-retrieve/scripts/codebase-retrieve.py
+bun install
+bun run test
+bun run check
 ```
 
 控制面脚本刻意只依赖 Python 标准库。Provider、打包和搜索能力通过 subprocess
