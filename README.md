@@ -179,6 +179,8 @@ The control plane intentionally depends only on the Python standard library.
 Provider, packaging, and search work happens through subprocess calls to
 external tools.
 
+CI and npm publishing are documented in [docs/release.md](docs/release.md).
+
 ## Acknowledgements
 
 This project builds on the community `notebooklm-py` project by Teng Lin for

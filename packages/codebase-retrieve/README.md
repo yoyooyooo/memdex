@@ -29,3 +29,6 @@ bun run cbr -- ask --repo /path/to/repo "Where is retry/backfill documented?"
 ```
 
 Set `PYTHON` to choose a specific Python executable.
+
+Release and CI details live in the repository-level
+[release process](https://github.com/yoyooyooo/codebase-retrieve/blob/main/docs/release.md).

@@ -4,19 +4,40 @@
   "description": "Agent-facing codebase semantic retrieval using NotebookLM, repomix snapshots, freshness checks, and local line verification.",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://github.com/yoyooyooo/codebase-retrieve#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yoyooyooo/codebase-retrieve.git",
+    "directory": "packages/codebase-retrieve"
+  },
+  "bugs": {
+    "url": "https://github.com/yoyooyooo/codebase-retrieve/issues"
+  },
+  "keywords": [
+    "agent",
+    "codebase",
+    "notebooklm",
+    "repomix",
+    "retrieval",
+    "semantic-search"
+  ],
   "bin": {
     "codebase-retrieve": "./bin/codebase-retrieve.js"
   },
   "files": [
-    "bin/",
+    "bin/codebase-retrieve.js",
     "LICENSE",
-    "scripts/",
+    "scripts/codebase-retrieve.py",
     "README.md"
   ],
   "scripts": {
     "codebase-retrieve": "bun ./bin/codebase-retrieve.js",
     "check": "python3 -m py_compile scripts/codebase-retrieve.py && python3 tests/test_codebase_retrieve_cli.py",
     "test": "python3 tests/test_codebase_retrieve_cli.py"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "engines": {
     "node": ">=18"

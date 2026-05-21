@@ -167,6 +167,8 @@ bun run check
 控制面脚本刻意只依赖 Python 标准库。Provider、打包和搜索能力通过 subprocess
 调用外部工具完成。
 
+CI 和 npm 发布流程见 [docs/release.md](docs/release.md)。
+
 ## 致谢
 
 本项目基于 Teng Lin 的社区项目 `notebooklm-py` 完成 NotebookLM 自动化：
