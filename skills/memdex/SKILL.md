@@ -1,9 +1,9 @@
 ---
-name: codebase-retrieve
-description: Project-level semantic retrieval for codebases using repo snapshots, NotebookLM, repomix, TTL refresh, and local line verification. Use when the user wants to index a repo, refresh a codebase semantic snapshot, ask architecture or implementation questions over a repo, or locate files/functions/tests with semantic search followed by local rg/sed/nl verification.
+name: memdex
+description: Project-level semantic retrieval for local projects, vaults, repos, and source sets using NotebookLM, repomix, TTL refresh, and local verification. Use when the user wants to index a source set, refresh a semantic snapshot, ask architecture or implementation questions over a project, or locate files/functions/docs with semantic search followed by local rg/sed/nl verification.
 ---
 
-# Codebase Retrieve
+# Memdex
 
 ## Quick Start
 
@@ -13,8 +13,8 @@ repomix bundle, TTL refresh, and local file/line verification.
 
 Prerequisites:
 
-- `codebase-retrieve` CLI must be on PATH. In this monorepo, use
-  `bun run cbr -- <args>`; installed npm packages provide `codebase-retrieve`.
+- `memdex` CLI must be on PATH. In this monorepo, use
+  `bun run memdex -- <args>`; installed npm packages provide `memdex`.
 - `notebooklm` must be a persistent CLI on PATH. If missing, run:
 
 ```bash
@@ -22,14 +22,14 @@ uv tool install git+https://github.com/teng-lin/notebooklm-py.git
 ```
 
 ```bash
-codebase-retrieve init --repo . --create-notebook
-codebase-retrieve ask --repo . "Where is reconnect/backfill implemented?"
-codebase-retrieve locate --repo . "invoice export retry command"
-codebase-retrieve pack --repo . --dry-run
+memdex init --repo . --create-notebook
+memdex ask --repo . "Where is reconnect/backfill implemented?"
+memdex locate --repo . "invoice export retry command"
+memdex pack --repo . --dry-run
 ```
 
 If the skill is installed outside this repository layout, run the copied script
-path directly or set `CODEBASE_RETRIEVE_CMD` to your wrapper command.
+path directly or set `MEMDEX_CMD` to your wrapper command.
 
 New sessions should call `ask` or `locate` directly. Both commands run
 freshness preflight internally, refresh or warn when policy allows, and stop
@@ -44,8 +44,8 @@ freshness metadata.
 
 ## Workflow
 
-1. Read `.codebase-retrieve/config.json` or run `init` to create it. Default
-   NotebookLM title is `codebase-retrieve:<project_name>`.
+1. Read `.memdex/config.json` or run `init` to create it. Default
+   NotebookLM title is `memdex:<project_name>`.
 2. Use `ask` for architecture/docs questions. It runs freshness preflight before
    provider Q&A.
 3. Use `locate` for code location questions. It runs freshness preflight, asks
@@ -60,25 +60,25 @@ freshness metadata.
 ## Commands
 
 ```bash
-codebase-retrieve init --repo .
-codebase-retrieve init --repo . --create-notebook
-codebase-retrieve init --repo . --reuse-existing-notebook
-codebase-retrieve ask --repo . "question"
-codebase-retrieve ask --repo . --yes "question"
-codebase-retrieve ask --repo . --verbose "question"
-codebase-retrieve ask --repo . --json "question"
-codebase-retrieve locate --repo . "thing to find"
-codebase-retrieve locate --repo . --verbose "thing to find"
-codebase-retrieve locate --repo . --json "thing to find"
-codebase-retrieve pack --repo . --dry-run
-codebase-retrieve pack --repo . --dry-run --json
-codebase-retrieve pack --repo . --dry-run --include-files --json
-codebase-retrieve temp-source upload --repo . --kind notes --title retry-design --file /tmp/source.md
-codebase-retrieve temp-source list --repo .
-codebase-retrieve temp-source cleanup --repo . --kind notes --yes
-codebase-retrieve status --repo .
-codebase-retrieve ensure --repo . --yes
-codebase-retrieve refresh --repo . --force
+memdex init --repo .
+memdex init --repo . --create-notebook
+memdex init --repo . --reuse-existing-notebook
+memdex ask --repo . "question"
+memdex ask --repo . --yes "question"
+memdex ask --repo . --verbose "question"
+memdex ask --repo . --json "question"
+memdex locate --repo . "thing to find"
+memdex locate --repo . --verbose "thing to find"
+memdex locate --repo . --json "thing to find"
+memdex pack --repo . --dry-run
+memdex pack --repo . --dry-run --json
+memdex pack --repo . --dry-run --include-files --json
+memdex temp-source upload --repo . --kind notes --title retry-design --file /tmp/source.md
+memdex temp-source list --repo .
+memdex temp-source cleanup --repo . --kind notes --yes
+memdex status --repo .
+memdex ensure --repo . --yes
+memdex refresh --repo . --force
 ```
 
 Command responsibilities:
@@ -104,13 +104,13 @@ skipped. `ask` and `locate` also skip provider calls when
 `freshness.status=needs-first-upload-approval`; rerun with `--yes` only when the
 user already approved the first broad upload.
 
-`init` writes `.codebase-retrieve/config.json` and `.codebase-retrieve/.gitignore`.
-State stays local under `.codebase-retrieve/state.local.json`. Repomix bundles
-are temporary files under `.codebase-retrieve/cache/`; the script deletes chunk
+`init` writes `.memdex/config.json` and `.memdex/.gitignore`.
+State stays local under `.memdex/state.local.json`. Repomix bundles
+are temporary files under `.memdex/cache/`; the script deletes chunk
 files after hash comparison or source upload and keeps only source-set metadata
 in state.
 
-`ensure`, `refresh`, `ask`, and `locate` use a repo-local `.codebase-retrieve/.lock`
+`ensure`, `refresh`, `ask`, and `locate` use a repo-local `.memdex/.lock`
 around freshness and upload decisions so concurrent requests do not race into
 duplicate NotebookLM source uploads.
 
@@ -121,12 +121,12 @@ not changed, and uploads only changed or new chunks. New chunk uploads and
 waits run in bounded parallelism while the repo lock is held. Retired old source
 IDs are recorded in local state after the new active set commits; the next
 locked run retries cleanup from state, so cleanup failure never invalidates the
-ready index. A local `.codebase-retrieve/pending-upload.local.json` journal lets
+ready index. A local `.memdex/pending-upload.local.json` journal lets
 the next run clean partial sources after an interrupted upload.
 
 Derived temporary sources are managed separately from repo chunks. Use
 `temp-source upload` for NotebookLM-only materials such as flashcard seeds.
-Temporary titles use `cbrtmp--<YYMMDDHHmm>--<kind>--<slug>--<hash>.md` and are
+Temporary titles use `memdextmp--<YYMMDDHHmm>--<kind>--<slug>--<hash>.md` and are
 recorded in `temporarySourceSets`. Cleanup deletes state-recorded temp source
 IDs only; prefix matches not recorded in local state are reported as
 `untrackedPrefixMatches` and are not deleted unless explicitly requested with
@@ -135,9 +135,9 @@ IDs only; prefix matches not recorded in local state are reported as
 Notebook naming is project-bound:
 
 ```text
-notebook_title = codebase-retrieve:<project_name>
-source_title_prefix = cbr
-source_title = cbr--<YYMMDDHHmm>--<group>--<chunk>--<hash>.md
+notebook_title = memdex:<project_name>
+source_title_prefix = memdex
+source_title = memdex--<YYMMDDHHmm>--<group>--<chunk>--<hash>.md
 ```
 
 ## Safety Rules
@@ -157,4 +157,4 @@ source_title = cbr--<YYMMDDHHmm>--<group>--<chunk>--<hash>.md
 
 - Config and state schema: [Config Schema](references/config-schema.md)
 - Detailed workflow and failure handling: [Workflow](references/workflow.md)
-- Agent-first rationale: [Proposal](../docs/codebase-retrieve-agent-first-proposal.md)
+- Agent-first rationale: [Proposal](../docs/memdex-agent-first-proposal.md)

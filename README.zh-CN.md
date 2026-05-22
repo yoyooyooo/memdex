@@ -1,12 +1,12 @@
-# codebase-retrieve
+# memdex
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-面向 AI agent 的代码库语义检索工具。它使用 NotebookLM、repomix
-快照、freshness 检查和本地行号校验，帮助 agent 在大型代码库中先找到方向，
-再回到本地 checkout 确认证据。
+面向 AI agent 的项目语义检索工具。它使用 NotebookLM、repomix 快照、
+freshness 检查和本地证据校验，帮助 agent 在大型 repo、vault、文档集或外部
+参考源码中先找到方向，再回到本地 checkout 确认证据。
 
-`codebase-retrieve` 的目标不是把 LLM 回答当成事实，而是把 NotebookLM
+`memdex` 的目标不是把 LLM 回答当成事实，而是把 NotebookLM
 作为语义定位器：先召回相关概念、文件和关键词，再用本地文件、测试、命令输出或
 项目权威文档确认精确路径、行号和结论。
 
@@ -16,8 +16,9 @@
 
 ## 为什么需要
 
-大型仓库对冷启动 agent 不友好。`rg` 很精确，但前提是 agent 已经知道应该搜什么。
-NotebookLM 能找到相关概念和可能的文件，但回答可能滞后，也经常不能提供可靠行号。
+大型项目、vault 和参考源码集对冷启动 agent 不友好。`rg` 很精确，但前提是
+agent 已经知道应该搜什么。NotebookLM 能找到相关概念和可能的文件，但回答可能滞后，
+也经常不能提供可靠行号。
 
 这个项目把两者组合起来：
 
@@ -35,14 +36,14 @@ NotebookLM 能找到相关概念和可能的文件，但回答可能滞后，也
 - 增量 chunk 上传，保持稳定的 whole-file chunk 规划。
 - 只清理由本工具记录的 NotebookLM source ID。
 - 支持临时 NotebookLM source，用于笔记、学习材料等派生内容。
-- 提供带 `codebase-retrieve` CLI 的 npm package。
+- 提供带 `memdex` CLI 的 npm package。
 - `skills/` 下提供 Codex/OpenAI 风格 skill 文件。
 
 ## 工作方式
 
 ```text
 repo checkout
-  -> .codebase-retrieve/config.json
+  -> .memdex/config.json
   -> repomix bundle chunks
   -> NotebookLM source set
   -> ask / locate provider query
@@ -55,8 +56,8 @@ repo checkout
 ## 仓库结构
 
 ```text
-packages/codebase-retrieve/ npm package 和 CLI 实现
-skills/codebase-retrieve/   Codebase retrieval agent skill
+packages/memdex/ npm package 和 CLI 实现
+skills/memdex/   Project retrieval agent skill
 skills/notebooklm/          NotebookLM 自动化辅助说明
 docs/                       设计说明和决策背景
 ```
@@ -64,11 +65,11 @@ docs/                       设计说明和决策背景
 在 monorepo checkout 中，使用 Bun workspace script：
 
 ```bash
-bun run cbr -- --help
+bun run memdex -- --help
 ```
 
-通过 npm package 安装后，CLI 命令是 `codebase-retrieve`。如果你包装或移动了脚本，
-可设置 `CODEBASE_RETRIEVE_CMD`，让工具生成的下一步命令指向你的 wrapper。
+通过 npm package 安装后，CLI 命令是 `memdex`。如果你包装或移动了脚本，
+可设置 `MEMDEX_CMD`，让工具生成的下一步命令指向你的 wrapper。
 
 ## 环境要求
 
@@ -91,7 +92,7 @@ notebooklm auth check --test
 初始化目标仓库：
 
 ```bash
-bun run cbr -- init \
+bun run memdex -- init \
   --repo /path/to/repo \
   --create-notebook
 ```
@@ -99,7 +100,7 @@ bun run cbr -- init \
 询问架构或文档问题：
 
 ```bash
-bun run cbr -- ask \
+bun run memdex -- ask \
   --repo /path/to/repo \
   "Where is retry/backfill documented?"
 ```
@@ -107,7 +108,7 @@ bun run cbr -- ask \
 定位可能的实现文件和本地行号：
 
 ```bash
-bun run cbr -- locate \
+bun run memdex -- locate \
   --repo /path/to/repo \
   "invoice export retry command"
 ```
@@ -115,7 +116,7 @@ bun run cbr -- locate \
 首次 broad upload 默认会被阻止。确认 source scope 后，用 `--yes` 显式批准：
 
 ```bash
-bun run cbr -- ask \
+bun run memdex -- ask \
   --repo /path/to/repo \
   --yes \
   "Where is retry/backfill documented?"
@@ -137,7 +138,7 @@ AGENTS.md, CLAUDE.md, README.md, Cargo.toml, package.json, justfile
 generated caches, public assets, large binary/media/archive files
 ```
 
-批准首次 broad upload 前，应先检查 `.codebase-retrieve/config.json`。
+批准首次 broad upload 前，应先检查 `.memdex/config.json`。
 
 ## 安全模型
 

@@ -1,6 +1,6 @@
 ---
 name: notebooklm
-description: Automate NotebookLM notebooks, sources, chat, generated artifacts, and project semantic-database retrieval. Use when the user mentions NotebookLM, asks to create/search/update a NotebookLM project index, treats NotebookLM as a repo/database retrieval layer, uploads a codebase for Q&A, asks where code/docs live, or wants semantic search followed by local file/line verification. Also use for NotebookLM podcasts, summaries, quizzes, flashcards, reports, videos, slide decks, mind maps, or downloads.
+description: Automate NotebookLM notebooks, sources, chat, generated artifacts, and project semantic-database retrieval. Use when the user mentions NotebookLM, asks to create/search/update a NotebookLM project index, treats NotebookLM as a repo/database retrieval layer, uploads a source set for Q&A, asks where code/docs live, or wants semantic search followed by local file/line verification. Also use for NotebookLM podcasts, summaries, quizzes, flashcards, reports, videos, slide decks, mind maps, or downloads.
 ---
 
 # NotebookLM Automation
@@ -40,7 +40,7 @@ asking any question:
 2. Prefer a notebook ID recorded in `AGENTS.md`, `CLAUDE.md`, `README.md`, or a
    local docs index.
 3. Otherwise match `notebooklm list --json` by stable project titles such as
-   `codebase-retrieve:<project>`, `repo: <project>`, or
+   `memdex:<project>`, `repo: <project>`, or
    `project-db: <project>`.
 4. If the current `notebooklm status` context is a different project/corpus, do
    not query it. Switch first with `notebooklm use <notebook_id>`.
@@ -64,7 +64,7 @@ with `-n <notebook_id>` / `--notebook <notebook_id>`, or isolate with
 ## Common Commands
 
 ```bash
-notebooklm create "codebase-retrieve:<project>"
+notebooklm create "memdex:<project>"
 notebooklm use <notebook_id>
 notebooklm source add ./file.md -n <notebook_id>
 notebooklm source list -n <notebook_id> --json
@@ -99,7 +99,7 @@ NotebookLM is discovery, not authority. For project work, verify all claims
 against local files, tests, command output, issue trackers, or the project’s
 declared source of truth before implementing or reporting evidence.
 
-For codebase retrieval, treat NotebookLM as a semantic locator. It can find
+For project retrieval, treat NotebookLM as a semantic locator. It can find
 likely files, functions, tests, concepts, and docs, but exact paths and line
 numbers must be verified locally with `rg -n`, `sed`, `nl -ba`, or the host
 editor. If NotebookLM returns a missing file, stale source, or unsupported line

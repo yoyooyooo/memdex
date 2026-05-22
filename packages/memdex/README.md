@@ -1,9 +1,9 @@
-# @yoyooyooo/codebase-retrieve
+# memdex
 
-CLI package for `codebase-retrieve`.
+CLI package for `memdex`.
 
 It wraps a Python stdlib control-plane script with an npm `bin` entry named
-`codebase-retrieve`.
+`memdex`.
 
 ## Requirements
 
@@ -16,16 +16,16 @@ It wraps a Python stdlib control-plane script with an npm `bin` entry named
 ## Usage
 
 ```bash
-codebase-retrieve init --repo /path/to/repo --create-notebook
-codebase-retrieve ask --repo /path/to/repo "Where is retry/backfill documented?"
-codebase-retrieve locate --repo /path/to/repo "invoice export retry command"
+memdex init --repo /path/to/repo --create-notebook
+memdex ask --repo /path/to/repo "Where is retry/backfill documented?"
+memdex locate --repo /path/to/repo "invoice export retry command"
 ```
 
 From the monorepo checkout:
 
 ```bash
-bun run cbr -- --help
-bun run cbr -- ask --repo /path/to/repo "Where is retry/backfill documented?"
+bun run memdex -- --help
+bun run memdex -- ask --repo /path/to/repo "Where is retry/backfill documented?"
 ```
 
 Set `PYTHON` to choose a specific Python executable.

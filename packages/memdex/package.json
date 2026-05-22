@@ -1,39 +1,40 @@
 {
-  "name": "@yoyooyooo/codebase-retrieve",
+  "name": "memdex",
   "version": "0.1.0",
-  "description": "Agent-facing codebase semantic retrieval using NotebookLM, repomix snapshots, freshness checks, and local line verification.",
+  "description": "Agent-facing semantic retrieval for local projects and source sets using NotebookLM, repomix snapshots, freshness checks, and local verification.",
   "type": "module",
   "license": "MIT",
   "homepage": "https://github.com/yoyooyooo/codebase-retrieve#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yoyooyooo/codebase-retrieve.git",
-    "directory": "packages/codebase-retrieve"
+    "directory": "packages/memdex"
   },
   "bugs": {
     "url": "https://github.com/yoyooyooo/codebase-retrieve/issues"
   },
   "keywords": [
     "agent",
-    "codebase",
+    "corpus",
     "notebooklm",
+    "project-memory",
     "repomix",
     "retrieval",
     "semantic-search"
   ],
   "bin": {
-    "codebase-retrieve": "bin/codebase-retrieve.js"
+    "memdex": "bin/memdex.js"
   },
   "files": [
-    "bin/codebase-retrieve.js",
+    "bin/memdex.js",
     "LICENSE",
-    "scripts/codebase-retrieve.py",
+    "scripts/memdex.py",
     "README.md"
   ],
   "scripts": {
-    "codebase-retrieve": "bun ./bin/codebase-retrieve.js",
-    "check": "python3 -m py_compile scripts/codebase-retrieve.py && python3 tests/test_codebase_retrieve_cli.py",
-    "test": "python3 tests/test_codebase_retrieve_cli.py"
+    "memdex": "bun ./bin/memdex.js",
+    "check": "python3 -m py_compile scripts/memdex.py && python3 tests/test_memdex_cli.py",
+    "test": "python3 tests/test_memdex_cli.py"
   },
   "publishConfig": {
     "access": "public",

@@ -1,4 +1,4 @@
-# Codebase Retrieve Workflow
+# Memdex Workflow
 
 ## Mental Model
 
@@ -23,22 +23,22 @@ evidence.
 Default NotebookLM title:
 
 ```text
-codebase-retrieve:<project_name>
+memdex:<project_name>
 ```
 
 Default source title prefix:
 
 ```text
-cbr
-cbr--<YYMMDDHHmm>--<group>--<chunk>--<hash>.md
+memdex
+memdex--<YYMMDDHHmm>--<group>--<chunk>--<hash>.md
 ```
 
 The title is for human routing and recovery. The notebook ID in
-`.codebase-retrieve/config.json` is still the authority for CLI calls.
+`.memdex/config.json` is still the authority for CLI calls.
 
-The `codebase-retrieve` CLI is distributed from the npm package under
-`packages/codebase-retrieve`. From this monorepo, use `bun run cbr -- <args>`.
-When installed as a package, use `codebase-retrieve <args>`.
+The `memdex` CLI is distributed from the npm package under
+`packages/memdex`. From this monorepo, use `bun run memdex -- <args>`.
+When installed as a package, use `memdex <args>`.
 
 If `notebooklm` is missing, install it persistently before init:
 
@@ -49,9 +49,9 @@ uv tool install git+https://github.com/teng-lin/notebooklm-py.git
 Init options:
 
 ```bash
-codebase-retrieve init --repo . --create-notebook
-codebase-retrieve init --repo . --reuse-existing-notebook
-codebase-retrieve init --repo . --notebook-id <id>
+memdex init --repo . --create-notebook
+memdex init --repo . --reuse-existing-notebook
+memdex init --repo . --notebook-id <id>
 ```
 
 `--create-notebook` first reuses an exact title match, then creates a new
@@ -93,11 +93,11 @@ The bundle-set hash is the final upload dedupe check. Git state is only a fast
 "could have changed" signal.
 
 Chunk files are temporary upload intermediates. They are written under
-`.codebase-retrieve/cache/` and deleted after hash comparison or upload. Local
+`.memdex/cache/` and deleted after hash comparison or upload. Local
 state retains `lastBundleSetSha256` plus `activeSourceSet`; it should not rely on
 long-lived bundle paths.
 
-`ensure`, `refresh`, `ask`, and `locate` take `.codebase-retrieve/.lock` before
+`ensure`, `refresh`, `ask`, and `locate` take `.memdex/.lock` before
 reading / writing state or uploading sources. Concurrent requests wait on the
 same repo-local lock instead of racing into duplicate NotebookLM uploads.
 
@@ -123,7 +123,7 @@ Default mode is `replace`:
 
 Never delete unrelated NotebookLM sources by title glob alone.
 
-During upload, `.codebase-retrieve/pending-upload.local.json` records newly
+During upload, `.memdex/pending-upload.local.json` records newly
 created source IDs. If the process is interrupted before state commit, the next
 locked run deletes those partial sources before planning a new upload. If the
 journal points at sources already present in `activeSourceSet`, it is discarded.
@@ -143,18 +143,18 @@ Use `temp-source` for derived materials such as flashcard seeds that should live
 in the same NotebookLM notebook but not become part of the repo index:
 
 ```bash
-codebase-retrieve temp-source upload --repo . \
+memdex temp-source upload --repo . \
   --kind notes --title retry-design --file /tmp/retry-design.md \
   --origin-chunk packages/001 --origin-file packages/billing/src/retry.ts
 
-codebase-retrieve temp-source list --repo .
-codebase-retrieve temp-source cleanup --repo . --kind notes --yes
+memdex temp-source list --repo .
+memdex temp-source cleanup --repo . --kind notes --yes
 ```
 
 Temporary source titles use:
 
 ```text
-cbrtmp--<YYMMDDHHmm>--<kind>--<slug>--<hash>.md
+memdextmp--<YYMMDDHHmm>--<kind>--<slug>--<hash>.md
 ```
 
 `temporarySourceSets` in local state owns deletion. Cleanup deletes only source
@@ -168,7 +168,7 @@ passes `--include-untracked-prefix --yes`.
 Use `ask` for broad repo questions:
 
 ```bash
-codebase-retrieve ask --repo . \
+memdex ask --repo . \
   "Which docs define retry and backoff behavior?"
 ```
 
@@ -191,7 +191,7 @@ from contaminating retrieval.
 Use `locate` when the user asks for code files, functions, tests, or line refs:
 
 ```bash
-codebase-retrieve locate --repo . \
+memdex locate --repo . \
   "where is invoice export retry implemented?"
 ```
 

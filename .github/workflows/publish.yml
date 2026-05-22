@@ -48,12 +48,12 @@ jobs:
         run: bun run check
 
       - name: CLI smoke
-        run: bun run cbr -- --help
+        run: bun run memdex -- --help
 
       - name: Package dry run
-        working-directory: packages/codebase-retrieve
+        working-directory: packages/memdex
         run: bun pm pack --dry-run
 
       - name: Publish
-        working-directory: packages/codebase-retrieve
+        working-directory: packages/memdex
         run: npm publish --access public --provenance

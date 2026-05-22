@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Project-level semantic codebase retrieval helper.
+"""Project-level semantic retrieval helper.
 
 This script intentionally depends only on Python stdlib for the control plane.
 It shells out to `npx repomix`, `notebooklm`, `git`, and `rg` when needed.
@@ -27,13 +27,14 @@ from pathlib import Path
 from typing import Any
 
 
-CONFIG_DIR = ".codebase-retrieve"
+CONFIG_DIR = ".memdex"
 CONFIG_JSON = "config.json"
 STATE_JSON = "state.local.json"
 PENDING_UPLOAD_JSON = "pending-upload.local.json"
-DEFAULT_NOTEBOOK_TITLE_PREFIX = "codebase-retrieve"
+DEFAULT_NOTEBOOK_TITLE_PREFIX = "memdex"
 SCRIPT_PATH = Path(__file__).resolve()
-SCRIPT_CMD_ENV = "CODEBASE_RETRIEVE_CMD"
+SCRIPT_CMD_ENV = "MEMDEX_CMD"
+LEGACY_SCRIPT_CMD_ENV = "CODEBASE_RETRIEVE_CMD"
 NOTEBOOKLM_PACKAGE = "git+https://github.com/teng-lin/notebooklm-py.git"
 NOTEBOOKLM_BIN_ENV = "NOTEBOOKLM_BIN"
 
@@ -59,6 +60,8 @@ def die(message: str, code: int = 2) -> None:
 
 def script_cmd() -> list[str]:
     override = os.environ.get(SCRIPT_CMD_ENV, "").strip()
+    if not override:
+        override = os.environ.get(LEGACY_SCRIPT_CMD_ENV, "").strip()
     if override:
         return shlex.split(override)
     return [sys.executable or "python3", str(SCRIPT_PATH)]
@@ -76,7 +79,7 @@ def missing_config_message(repo: Path, config_file: Path, command: str = "") -> 
     ask_yes = command_line(repo, "ask", "--yes", "your question")
     locate = command_line(repo, "locate", "thing to find")
     lines = [
-        f"project is not initialized for codebase retrieval: {config_file}",
+        f"project is not initialized for project retrieval: {config_file}",
         "",
         "Initialize this repo first:",
         f"  {init_create}",
@@ -92,7 +95,7 @@ def missing_config_message(repo: Path, config_file: Path, command: str = "") -> 
         f"  {ask_yes}",
     ]
     if command:
-        lines.insert(1, f"Command `{command}` needs `.codebase-retrieve/config.json` before it can run.")
+        lines.insert(1, f"Command `{command}` needs `.memdex/config.json` before it can run.")
     return "\n".join(lines)
 
 
@@ -101,7 +104,7 @@ def uninitialized_status(repo: Path, config_file: Path) -> dict[str, Any]:
         "status": "not-initialized",
         "initialized": False,
         "config": str(config_file),
-        "message": "project is not initialized for codebase retrieval",
+        "message": "project is not initialized for project retrieval",
         "next": {
             "createNotebook": command_line(repo, "init", "--create-notebook"),
             "reuseExistingNotebook": command_line(repo, "init", "--reuse-existing-notebook"),
@@ -242,7 +245,7 @@ def default_source_title_prefix(project_name: str, title_prefix: str = DEFAULT_N
 
 
 def default_short_source_title_prefix() -> str:
-    return "cbr"
+    return "memdex"
 
 
 def default_config(
@@ -838,7 +841,7 @@ def expand_bundle_path(repo: Path, config: dict[str, Any]) -> Path:
 def expand_chunk_path(repo: Path, config: dict[str, Any], title: str) -> Path:
     template = config.get("bundle", {}).get("output") or f"{CONFIG_DIR}/cache/{{title}}"
     if "{title}" in template:
-        rel = template.format(title=title, prefix=config.get("notebooklm", {}).get("source_title_prefix") or "cbr", timestamp=now_utc().strftime("%Y%m%dT%H%M%SZ"))
+        rel = template.format(title=title, prefix=config.get("notebooklm", {}).get("source_title_prefix") or default_short_source_title_prefix(), timestamp=now_utc().strftime("%Y%m%dT%H%M%SZ"))
         return repo / rel
     base = repo / template
     return base.parent / title
@@ -1888,7 +1891,7 @@ def freshness_warning(freshness: dict[str, Any]) -> str | None:
 def provider_block_message(freshness: dict[str, Any]) -> str | None:
     status = str(freshness.get("status") or "")
     if status == "not-initialized":
-        return "skipped; project is not initialized for codebase retrieval."
+        return "skipped; project is not initialized for project retrieval."
     if status == "needs-first-upload-approval":
         return "skipped; first broad upload requires approval. Rerun ask/locate with --yes or run refresh explicitly."
     return None
@@ -2322,7 +2325,7 @@ def cmd_temp_source_cleanup(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="codebase-retrieve")
+    parser = argparse.ArgumentParser(prog="memdex")
     sub = parser.add_subparsers(dest="command", required=True)
 
     init = sub.add_parser("init")

@@ -4,14 +4,14 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const scriptPath = resolve(packageRoot, "scripts", "codebase-retrieve.py");
+const scriptPath = resolve(packageRoot, "scripts", "memdex.py");
 const python = process.env.PYTHON || "python3";
 
 const result = spawnSync(python, [scriptPath, ...process.argv.slice(2)], {
   stdio: "inherit",
   env: {
     ...process.env,
-    CODEBASE_RETRIEVE_CMD: process.env.CODEBASE_RETRIEVE_CMD || "codebase-retrieve"
+    MEMDEX_CMD: process.env.MEMDEX_CMD || process.env.CODEBASE_RETRIEVE_CMD || "memdex"
   }
 });
 

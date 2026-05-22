@@ -46,15 +46,15 @@ plausible and waste the local verification pass.
 3. Prefer an explicit notebook ID recorded in `AGENTS.md`, `CLAUDE.md`,
    `README.md`, or a local docs index.
 4. Otherwise match existing notebooks by stable title, in this order:
-   `codebase-retrieve:<project>`, `repo: <project>`,
+   `memdex:<project>`, `repo: <project>`,
    `project-db: <project>`, then exact project-name title.
 5. If the status context is missing or points to another project/corpus, switch
    to the resolved notebook with `notebooklm use <notebook_id>`.
 6. Still pass `-n <notebook_id>` / `--notebook <notebook_id>` on project
    commands. The explicit flag is the authority; `use` only protects the
    interactive/default context.
-7. If no notebook exists, create one using `codebase-retrieve:<project>` for
-   codebase retrieval. Report the created ID and switch to it.
+7. If no notebook exists, create one using `memdex:<project>` for
+   project retrieval. Report the created ID and switch to it.
 8. Run `notebooklm source list -n <notebook_id> --json` to identify whether the
    notebook is empty, stale, or already sourced. Do not upload a broad local
    snapshot unless the user requested or approved that upload.
@@ -62,8 +62,8 @@ plausible and waste the local verification pass.
 Use this resolved notebook ID in `queries_run` and mention any mismatch or
 empty/stale source condition in the final claim boundary.
 
-Create one notebook per durable project or corpus. For codebase retrieval, use
-`codebase-retrieve:<project>` as the default stable title. If the project guide
+Create one notebook per durable project or corpus. For project retrieval, use
+`memdex:<project>` as the default stable title. If the project guide
 already records another canonical title or notebook ID, follow that record
 instead.
 

@@ -1,15 +1,15 @@
-# codebase-retrieve
+# memdex
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Agent-facing codebase semantic retrieval using NotebookLM, repomix snapshots,
-freshness checks, and local line verification.
+Agent-facing semantic retrieval for local projects and source sets using
+NotebookLM, repomix snapshots, freshness checks, and local verification.
 
-`codebase-retrieve` helps an AI agent answer repository questions without
+`memdex` helps an AI agent answer project questions without
 treating an LLM answer as ground truth. It builds a project-local NotebookLM
-index from reproducible repo bundles, keeps that index fresh enough for
-discovery, then routes exact file and line claims back through the local
-checkout.
+index from reproducible source bundles, keeps that index fresh enough for
+discovery, then routes exact source, file, and line claims back through local
+verification.
 
 > [!IMPORTANT]
 > NotebookLM is used as a semantic locator, not an authority layer. Exact paths,
@@ -18,10 +18,10 @@ checkout.
 
 ## Why
 
-Large repositories are hard for agents to navigate from cold start. Plain `rg`
-is exact but only works when the agent already knows the right words. NotebookLM
-can find related concepts and likely files, but its answers may be stale or lack
-accurate line numbers.
+Large projects, vaults, and reference source sets are hard for agents to
+navigate from cold start. Plain `rg` is exact but only works when the agent
+already knows the right words. NotebookLM can find related concepts and likely
+files, but its answers may be stale or lack accurate line numbers.
 
 This project combines both:
 
@@ -39,14 +39,14 @@ This project combines both:
 - Incremental chunk uploads with stable whole-file chunk planning.
 - Source cleanup limited to NotebookLM source IDs recorded by this tool.
 - Temporary NotebookLM sources for derived material such as notes or study aids.
-- npm package with a `codebase-retrieve` CLI.
+- npm package with a `memdex` CLI.
 - Codex/OpenAI-style skill files under `skills/`.
 
 ## How It Works
 
 ```text
 repo checkout
-  -> .codebase-retrieve/config.json
+  -> .memdex/config.json
   -> repomix bundle chunks
   -> NotebookLM source set
   -> ask / locate provider query
@@ -60,8 +60,8 @@ should call `ask` or `locate` directly.
 ## Repository Layout
 
 ```text
-packages/codebase-retrieve/ npm package and CLI implementation
-skills/codebase-retrieve/   Agent skill for codebase retrieval
+packages/memdex/ npm package and CLI implementation
+skills/memdex/   Agent skill for project retrieval
 skills/notebooklm/          Supporting NotebookLM automation guidance
 docs/                       Design notes and rationale
 ```
@@ -69,11 +69,11 @@ docs/                       Design notes and rationale
 From this monorepo checkout, use the Bun workspace script:
 
 ```bash
-bun run cbr -- --help
+bun run memdex -- --help
 ```
 
-When installed as an npm package, the CLI command is `codebase-retrieve`.
-If you wrap or relocate the script, set `CODEBASE_RETRIEVE_CMD` so generated
+When installed as an npm package, the CLI command is `memdex`.
+If you wrap or relocate the script, set `MEMDEX_CMD` so generated
 next-step commands point at your wrapper.
 
 ## Requirements
@@ -97,7 +97,7 @@ notebooklm auth check --test
 Initialize a target repository:
 
 ```bash
-bun run cbr -- init \
+bun run memdex -- init \
   --repo /path/to/repo \
   --create-notebook
 ```
@@ -105,7 +105,7 @@ bun run cbr -- init \
 Ask an architecture or documentation question:
 
 ```bash
-bun run cbr -- ask \
+bun run memdex -- ask \
   --repo /path/to/repo \
   "Where is retry/backfill documented?"
 ```
@@ -113,7 +113,7 @@ bun run cbr -- ask \
 Locate likely implementation files and line refs:
 
 ```bash
-bun run cbr -- locate \
+bun run memdex -- locate \
   --repo /path/to/repo \
   "invoice export retry command"
 ```
@@ -122,7 +122,7 @@ First broad upload is intentionally blocked unless approved. After reviewing
 the source scope, rerun with `--yes`:
 
 ```bash
-bun run cbr -- ask \
+bun run memdex -- ask \
   --repo /path/to/repo \
   --yes \
   "Where is retry/backfill documented?"
@@ -144,7 +144,7 @@ Default safety exclusions block common sensitive or noisy paths:
 generated caches, public assets, large binary/media/archive files
 ```
 
-Review `.codebase-retrieve/config.json` before approving the first broad upload.
+Review `.memdex/config.json` before approving the first broad upload.
 
 ## Safety Model
 

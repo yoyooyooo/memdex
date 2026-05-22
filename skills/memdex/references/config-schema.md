@@ -1,6 +1,6 @@
-# Codebase Retrieve Config Schema
+# Memdex Config Schema
 
-The project config lives in `.codebase-retrieve/config.json` by default. JSON is
+The project config lives in `.memdex/config.json` by default. JSON is
 the default because it works with Python stdlib. YAML may be read only when
 PyYAML is installed.
 
@@ -15,10 +15,10 @@ PyYAML is installed.
   "provider": "notebooklm",
   "notebooklm": {
     "notebook_id": "",
-    "notebook_title_prefix": "codebase-retrieve",
-    "notebook_title": "codebase-retrieve:repo-name",
-    "source_title_prefix": "cbr",
-    "temporary_source_title_prefix": "cbrtmp",
+    "notebook_title_prefix": "memdex",
+    "notebook_title": "memdex:repo-name",
+    "source_title_prefix": "memdex",
+    "temporary_source_title_prefix": "memdextmp",
     "wait_after_upload": true,
     "upload_parallelism": 4,
     "wait_parallelism": 8,
@@ -44,7 +44,7 @@ PyYAML is installed.
       "package.json",
       "justfile"
     ],
-    "output": ".codebase-retrieve/cache/{prefix}-{timestamp}.txt",
+    "output": ".memdex/cache/{prefix}-{timestamp}.txt",
     "style": "",
     "compress": false,
     "target_chunk_bytes": 716800,
@@ -136,7 +136,7 @@ PyYAML is installed.
 
 ## State
 
-`.codebase-retrieve/state.local.json` is local-only and should not be committed.
+`.memdex/state.local.json` is local-only and should not be committed.
 
 ```json
 {
@@ -151,13 +151,13 @@ PyYAML is installed.
   "lastBundlePath": null,
   "activeSourceSet": {
     "id": "2605200912",
-    "prefix": "cbr",
+    "prefix": "memdex",
     "bundleSetSha256": "sha256:...",
     "uploadedAt": "2026-05-20T08:36:00Z",
     "sources": [
       {
         "id": "source-id",
-        "title": "cbr--2605200912--docs--001--a1b2c3d4.md",
+        "title": "memdex--2605200912--docs--001--a1b2c3d4.md",
         "group": "docs",
         "chunk": "001",
         "chunkKey": "docs/001",
@@ -189,7 +189,7 @@ PyYAML is installed.
       "sources": [
         {
           "id": "temp-source-id",
-          "title": "cbrtmp--2605201310--notes--retry-design--a1b2c3d4.md",
+          "title": "memdextmp--2605201310--notes--retry-design--a1b2c3d4.md",
           "contentSha256": "sha256:...",
           "uploadedAt": "2026-05-20T13:10:00Z",
           "status": "ready",
@@ -210,20 +210,20 @@ PyYAML is installed.
 Commit:
 
 ```text
-.codebase-retrieve/config.json
-.codebase-retrieve/.gitignore
+.memdex/config.json
+.memdex/.gitignore
 ```
 
 Do not commit:
 
 ```text
-.codebase-retrieve/state.local.json
-.codebase-retrieve/pending-upload.local.json
-.codebase-retrieve/cache/**
+.memdex/state.local.json
+.memdex/pending-upload.local.json
+.memdex/cache/**
 ```
 
 Repomix bundles are upload intermediates. They are written under
-`.codebase-retrieve/cache/` and deleted after bundle-set hash comparison or
+`.memdex/cache/` and deleted after bundle-set hash comparison or
 provider source upload. State should keep `lastBundleSetSha256` and
 `activeSourceSet`, not depend on retained chunk files.
 
@@ -261,7 +261,7 @@ can reuse the project-level freshness and line-verification workflow.
 Default NotebookLM title:
 
 ```text
-codebase-retrieve:<project.name>
+memdex:<project.name>
 ```
 
 The title is a human-facing binding between a repository and its NotebookLM
@@ -272,9 +272,9 @@ the ID by exact title match.
 Source title prefix:
 
 ```text
-cbr
-cbr--<YYMMDDHHmm>--<group>--<chunk>--<hash>.md
-cbrtmp--<YYMMDDHHmm>--<kind>--<slug>--<hash>.md
+memdex
+memdex--<YYMMDDHHmm>--<group>--<chunk>--<hash>.md
+memdextmp--<YYMMDDHHmm>--<kind>--<slug>--<hash>.md
 ```
 
 The NotebookLM notebook title already identifies the project. Source titles stay

@@ -1,4 +1,4 @@
-# codebase-retrieve Agent-First 终局提案
+# memdex Agent-First 终局提案
 
 日期：2026-05-20
 
@@ -6,7 +6,7 @@
 
 ## 背景
 
-`codebase-retrieve` 的目标不是让用户或 agent 管理索引，而是让一个 repo 在新会话里像语义知识库一样可问、可定位、可校验。
+`memdex` 的目标不是让用户或 agent 管理索引，而是让一个 repo 在新会话里像语义知识库一样可问、可定位、可校验。
 
 当前命令面保留了管理视角：
 
@@ -28,8 +28,8 @@ status -> ensure -> ask / locate
 默认入口：
 
 ```bash
-codebase-retrieve ask --repo . "question"
-codebase-retrieve locate --repo . "thing to find"
+memdex ask --repo . "question"
+memdex locate --repo . "thing to find"
 ```
 
 `status` / `ensure` / `refresh` 不删除，但下沉为维护命令：
@@ -281,10 +281,10 @@ status/ensure 不再出现在默认问答路径。
 落地文件：
 
 ```text
-packages/codebase-retrieve/scripts/codebase-retrieve.py
-packages/codebase-retrieve/tests/test_codebase_retrieve_cli.py
-skills/codebase-retrieve/SKILL.md
-skills/codebase-retrieve/references/workflow.md
+packages/memdex/scripts/memdex.py
+packages/memdex/tests/test_memdex_cli.py
+skills/memdex/SKILL.md
+skills/memdex/references/workflow.md
 ```
 
 ### Phase 2：locate 结构化召回
@@ -339,7 +339,7 @@ locate 输出前 5 条结果足够 agent 判断下一步读取文件。
 
 ## 最终口径
 
-`codebase-retrieve` 的 agent-first 终局是：
+`memdex` 的 agent-first 终局是：
 
 ```text
 ask/locate 是用户意图入口。

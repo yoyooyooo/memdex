@@ -1,7 +1,7 @@
 # Release Process
 
-This repository publishes the `@yoyooyooo/codebase-retrieve` npm package from
-`packages/codebase-retrieve`.
+This repository publishes the `memdex` npm package from
+`packages/memdex`.
 
 ## CI
 
@@ -9,7 +9,7 @@ Every pull request and every push to `main` runs:
 
 - `bun install --frozen-lockfile`
 - `bun run check`
-- `bun run cbr -- --help`
+- `bun run memdex -- --help`
 - `bun pm pack --dry-run`
 
 CI tests Python 3.10 through 3.14 on Ubuntu.
@@ -24,7 +24,7 @@ should be stored once the package is connected to npm.
 
 Required npm setup:
 
-1. Create or claim the `@yoyooyooo/codebase-retrieve` package on npm.
+1. Create or claim the `memdex` package on npm.
 2. Add this GitHub repository as a trusted publisher for that package.
 3. Set the trusted workflow filename to `publish.yml`.
 4. Set the trusted environment to `npm-publish`.
@@ -35,7 +35,7 @@ Required npm setup:
 
 Before creating a GitHub Release:
 
-1. Update `packages/codebase-retrieve/package.json`.
+1. Update `packages/memdex/package.json`.
 2. Run `bun install` so `bun.lock` records the same workspace version.
 3. Run `bun run check`.
 4. Commit the version bump.
