@@ -581,7 +581,10 @@ class CodebaseRetrieveCliTest(unittest.TestCase):
                 calls.append(argv)
                 return subprocess.CompletedProcess(argv, 0, '{"answer":"ok"}', "")
 
-            with patch.object(memdex, "run", side_effect=fake_run):
+            with (
+                patch.object(memdex, "notebooklm_cmd", return_value=["/bin/notebooklm"]),
+                patch.object(memdex, "run", side_effect=fake_run),
+            ):
                 answer = memdex.ask_provider(repo, "question")
 
         self.assertEqual(answer, {"answer": "ok"})
