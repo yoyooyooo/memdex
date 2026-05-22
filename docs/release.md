@@ -68,6 +68,14 @@ smokes the CLI, dry run packs the package, runs `npm publish` when needed,
 verifies npm contains the published version, then creates or updates the GitHub
 Release.
 
+If npm publish succeeds but GitHub Release creation fails, rerun `publish.yml`
+manually with the same tag. The workflow will skip npm publish, verify the npm
+version, and create/update the GitHub Release:
+
+```bash
+gh workflow run publish.yml --repo yoyooyooo/memdex -f tag=v0.1.2
+```
+
 ## Changelog
 
 GitHub Release notes are generated in CI after npm publish is verified.
