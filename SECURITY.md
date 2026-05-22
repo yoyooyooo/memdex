@@ -15,7 +15,7 @@ Security-sensitive areas include:
 - source selection and `safety.never_upload` behavior;
 - first broad-upload approval;
 - NotebookLM source deletion and cleanup ownership;
-- local state files under `.codebase-retrieve/`;
+- local state files under `.memdex/`;
 - command construction for subprocess calls.
 
 ## Data Handling
