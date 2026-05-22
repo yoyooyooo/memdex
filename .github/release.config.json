@@ -11,7 +11,9 @@
   "lockfileCommand": [
     "bun",
     "install",
-    "--lockfile-only"
+    "--lockfile-only",
+    "--registry",
+    "https://registry.npmjs.org"
   ],
   "checkCommand": [
     "bun",
