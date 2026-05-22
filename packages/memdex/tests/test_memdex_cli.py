@@ -25,7 +25,38 @@ def json_loads(value: str):
     return json.loads(value)
 
 
-class CodebaseRetrieveCliTest(unittest.TestCase):
+class MemdexCliTest(unittest.TestCase):
+    def command_help(self, *args: str) -> str:
+        stdout = io.StringIO()
+        with self.assertRaises(SystemExit) as raised, redirect_stdout(stdout):
+            memdex.build_parser().parse_args([*args, "--help"])
+        self.assertEqual(raised.exception.code, 0)
+        return stdout.getvalue()
+
+    def test_top_level_help_routes_agents_to_primary_commands(self) -> None:
+        help_text = memdex.build_parser().format_help()
+
+        self.assertIn("Agent-facing semantic retrieval", help_text)
+        self.assertIn("NotebookLM as a semantic locator", help_text)
+        self.assertIn("ask          answer semantic project questions", help_text)
+        self.assertIn("ask      answer architecture/docs/status questions", help_text)
+        self.assertIn("locate   find likely files or symbols", help_text)
+        self.assertIn("init     create .memdex/config.json", help_text)
+
+    def test_primary_command_help_explains_agent_intent(self) -> None:
+        ask_help = self.command_help("ask")
+        locate_help = self.command_help("locate")
+        init_help = self.command_help("init")
+
+        self.assertIn("Use this for architecture", ask_help)
+        self.assertIn("docs, behavior", ask_help)
+        self.assertIn("--yes", ask_help)
+        self.assertIn("approve first broad upload", ask_help)
+        self.assertIn("where is X?", locate_help)
+        self.assertIn("verify local line refs", locate_help)
+        self.assertIn("--create-notebook", init_help)
+        self.assertIn("create the NotebookLM notebook", init_help)
+
     def test_plan_chunked_bundles_keeps_whole_files_under_named_groups(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

@@ -21,6 +21,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import textwrap
 import threading
 import time
 from pathlib import Path
@@ -2325,95 +2326,184 @@ def cmd_temp_source_cleanup(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="memdex")
-    sub = parser.add_subparsers(dest="command", required=True)
+    parser = argparse.ArgumentParser(
+        prog="memdex",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent(
+            """
+            Agent-facing semantic retrieval for projects and source sets.
 
-    init = sub.add_parser("init")
-    init.add_argument("--repo", default=".")
-    init.add_argument("--notebook-id", default="")
-    init.add_argument("--project-name", default="")
-    init.add_argument("--notebook-title-prefix", default=DEFAULT_NOTEBOOK_TITLE_PREFIX)
-    init.add_argument("--notebook-title", default="")
-    init.add_argument("--reuse-existing-notebook", action="store_true")
-    init.add_argument("--create-notebook", action="store_true")
-    init.add_argument("--source-title-prefix", default="")
-    init.add_argument("--include", default="")
-    init.add_argument("--force", action="store_true")
-    init.set_defaults(func=cmd_init)
+            Memdex uses NotebookLM as a semantic locator, then treats local files,
+            command output, and project docs as authority for exact evidence.
+            Start with init once. For normal agent work, call ask or locate directly;
+            they run freshness preflight before querying the provider.
+            """
+        ).strip(),
+        epilog=textwrap.dedent(
+            """
+            Common agent paths:
+              memdex init --repo . --create-notebook
+              memdex ask --repo . "Where is retry/backfill documented?"
+              memdex locate --repo . "invoice export retry command"
+              memdex ask --repo . --yes "question"   # approve first broad upload
 
-    status = sub.add_parser("status")
-    status.add_argument("--repo", default=".")
-    status.add_argument("--json", action="store_true")
-    status.set_defaults(func=cmd_status)
+            Command routing:
+              ask      answer architecture/docs/status questions over the source set
+              locate   find likely files or symbols and return local line refs
+              init     create .memdex/config.json and bind a NotebookLM notebook
+              status   inspect local config, freshness, and recorded source state
+              ensure   prewarm or refresh the index when policy allows
+              refresh  force a source replacement
+              pack     preview deterministic repomix chunks without provider Q&A
+            """
+        ).strip(),
+    )
+    sub = parser.add_subparsers(title="commands", dest="command", metavar="<command>", required=True)
 
-    pack = sub.add_parser("pack")
-    pack.add_argument("--repo", default=".")
-    pack.add_argument("--set-id", default="")
-    pack.add_argument("--dry-run", action="store_true")
-    pack.add_argument("--include-files", action="store_true")
-    pack.add_argument("--json", action="store_true")
-    pack.set_defaults(func=cmd_pack)
+    ask = sub.add_parser(
+        "ask",
+        help="answer semantic project questions with freshness preflight",
+        description=textwrap.dedent(
+            """
+            Ask a question over the configured source set.
 
-    ensure = sub.add_parser("ensure")
-    ensure.add_argument("--repo", default=".")
-    ensure.add_argument("--force", action="store_true")
-    ensure.add_argument("--yes", action="store_true")
-    ensure.add_argument("--json", action="store_true")
-    ensure.set_defaults(func=cmd_ensure)
-
-    refresh = sub.add_parser("refresh")
-    refresh.add_argument("--repo", default=".")
-    refresh.add_argument("--force", action="store_true")
-    refresh.add_argument("--json", action="store_true")
-    refresh.set_defaults(func=cmd_refresh)
-
-    ask = sub.add_parser("ask")
-    ask.add_argument("question")
-    ask.add_argument("--repo", default=".")
-    ask.add_argument("--yes", action="store_true")
-    ask.add_argument("--force-refresh", action="store_true")
-    ask.add_argument("--json", action="store_true")
-    ask.add_argument("--verbose", action="store_true")
+            Use this for architecture, docs, behavior, ownership, or status questions.
+            Memdex checks freshness first, queries NotebookLM, then prints compact
+            provider references. Verify exact claims from local evidence.
+            """
+        ).strip(),
+    )
+    ask.add_argument("question", help="natural-language question to ask over the source set")
+    ask.add_argument("--repo", default=".", help="project root (default: current directory)")
+    ask.add_argument("--yes", action="store_true", help="approve first broad upload if setup is otherwise ready")
+    ask.add_argument("--force-refresh", action="store_true", help="refresh managed sources before asking")
+    ask.add_argument("--json", action="store_true", help="print machine-readable JSON")
+    ask.add_argument("--verbose", action="store_true", help="include freshness and provider metadata")
     ask.set_defaults(func=cmd_ask)
 
-    locate = sub.add_parser("locate")
-    locate.add_argument("query")
-    locate.add_argument("--repo", default=".")
-    locate.add_argument("--yes", action="store_true")
-    locate.add_argument("--force-refresh", action="store_true")
-    locate.add_argument("--include-provider-answer", action="store_true")
-    locate.add_argument("--json", action="store_true")
-    locate.add_argument("--verbose", action="store_true")
+    locate = sub.add_parser(
+        "locate",
+        help="find likely files or symbols and verify local line refs",
+        description=textwrap.dedent(
+            """
+            Locate implementation, docs, tests, or symbols and verify local line refs.
+
+            Use this when the user asks "where is X?" or needs candidate paths.
+            Memdex queries the semantic provider for candidates, then checks local
+            files with exact line references when possible.
+            """
+        ).strip(),
+    )
+    locate.add_argument("query", help="natural-language thing to find")
+    locate.add_argument("--repo", default=".", help="project root (default: current directory)")
+    locate.add_argument("--yes", action="store_true", help="approve first broad upload if setup is otherwise ready")
+    locate.add_argument("--force-refresh", action="store_true", help="refresh managed sources before locating")
+    locate.add_argument("--include-provider-answer", action="store_true", help="include the raw provider answer in output")
+    locate.add_argument("--json", action="store_true", help="print machine-readable JSON")
+    locate.add_argument("--verbose", action="store_true", help="include freshness metadata")
     locate.set_defaults(func=cmd_locate)
 
-    temp = sub.add_parser("temp-source")
-    temp_sub = temp.add_subparsers(dest="temp_command", required=True)
+    init = sub.add_parser(
+        "init",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        help="create .memdex/config.json and bind a NotebookLM notebook",
+        description="Create project-local Memdex config and bind it to a NotebookLM notebook.",
+        epilog=textwrap.dedent(
+            """
+            Examples:
+              memdex init --repo . --create-notebook
+              memdex init --repo . --reuse-existing-notebook
+              memdex init --repo . --notebook-id <id>
+            """
+        ).strip(),
+    )
+    init.add_argument("--repo", default=".", help="project, repo, vault, or source-set root (default: current directory)")
+    init.add_argument("--notebook-id", default="", help="bind an existing NotebookLM notebook by ID")
+    init.add_argument("--project-name", default="", help="stable project key for notebook and source titles (default: repo basename)")
+    init.add_argument("--notebook-title-prefix", default=DEFAULT_NOTEBOOK_TITLE_PREFIX, help="NotebookLM title prefix (default: memdex)")
+    init.add_argument("--notebook-title", default="", help="exact NotebookLM title to create or reuse")
+    init.add_argument("--reuse-existing-notebook", action="store_true", help="reuse an exact title match; do not create cloud state")
+    init.add_argument("--create-notebook", action="store_true", help="create the NotebookLM notebook when no exact title match exists")
+    init.add_argument("--source-title-prefix", default="", help="prefix for managed NotebookLM source titles (default: memdex)")
+    init.add_argument("--include", default="", help="comma-separated include roots or files for the source set")
+    init.add_argument("--force", action="store_true", help="overwrite existing .memdex/config.json")
+    init.set_defaults(func=cmd_init)
 
-    temp_upload = temp_sub.add_parser("upload")
-    temp_upload.add_argument("--repo", default=".")
-    temp_upload.add_argument("--kind", required=True)
-    temp_upload.add_argument("--title", required=True)
-    temp_upload.add_argument("--file", required=True)
-    temp_upload.add_argument("--origin-chunk", action="append", default=[])
-    temp_upload.add_argument("--origin-file", action="append", default=[])
-    temp_upload.add_argument("--ttl-seconds", type=int, default=0)
-    temp_upload.add_argument("--json", action="store_true")
+    status = sub.add_parser(
+        "status",
+        help="inspect config, freshness, and recorded source state",
+        description="Inspect local Memdex config, freshness fingerprints, and NotebookLM source state.",
+    )
+    status.add_argument("--repo", default=".", help="project root (default: current directory)")
+    status.add_argument("--json", action="store_true", help="print machine-readable JSON")
+    status.set_defaults(func=cmd_status)
+
+    pack = sub.add_parser(
+        "pack",
+        help="preview deterministic repomix chunks",
+        description="Preview or build deterministic whole-file chunks for the configured source set.",
+    )
+    pack.add_argument("--repo", default=".", help="project root (default: current directory)")
+    pack.add_argument("--set-id", default="", help="stable source-set ID for rendered chunk titles")
+    pack.add_argument("--dry-run", action="store_true", help="show planned chunks without running repomix")
+    pack.add_argument("--include-files", action="store_true", help="include per-chunk file lists in output")
+    pack.add_argument("--json", action="store_true", help="print machine-readable JSON")
+    pack.set_defaults(func=cmd_pack)
+
+    ensure = sub.add_parser(
+        "ensure",
+        help="prewarm or refresh the index when policy allows",
+        description="Run freshness preflight and upload/refresh sources only when policy allows.",
+    )
+    ensure.add_argument("--repo", default=".", help="project root (default: current directory)")
+    ensure.add_argument("--force", action="store_true", help="bypass freshness TTL and rebuild source state")
+    ensure.add_argument("--yes", action="store_true", help="approve the first broad upload for this run")
+    ensure.add_argument("--json", action="store_true", help="print machine-readable JSON")
+    ensure.set_defaults(func=cmd_ensure)
+
+    refresh = sub.add_parser(
+        "refresh",
+        help="force source replacement",
+        description="Refresh managed NotebookLM sources, replacing old recorded sources after success.",
+    )
+    refresh.add_argument("--repo", default=".", help="project root (default: current directory)")
+    refresh.add_argument("--force", action="store_true", help="force refresh even when freshness checks would skip it")
+    refresh.add_argument("--json", action="store_true", help="print machine-readable JSON")
+    refresh.set_defaults(func=cmd_refresh)
+
+    temp = sub.add_parser(
+        "temp-source",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        help="manage temporary derived NotebookLM sources",
+        description="Upload, list, or clean temporary derived sources such as notes or study aids.",
+    )
+    temp_sub = temp.add_subparsers(title="temp-source commands", dest="temp_command", metavar="<command>", required=True)
+
+    temp_upload = temp_sub.add_parser("upload", help="upload a temporary source file")
+    temp_upload.add_argument("--repo", default=".", help="project root (default: current directory)")
+    temp_upload.add_argument("--kind", required=True, help="temporary source kind, for example notes or flashcard")
+    temp_upload.add_argument("--title", required=True, help="human-readable title slug for this temporary source")
+    temp_upload.add_argument("--file", required=True, help="local markdown/text file to upload")
+    temp_upload.add_argument("--origin-chunk", action="append", default=[], help="origin active chunk key; repeatable")
+    temp_upload.add_argument("--origin-file", action="append", default=[], help="origin local file path; repeatable")
+    temp_upload.add_argument("--ttl-seconds", type=int, default=0, help="optional expiry TTL in seconds")
+    temp_upload.add_argument("--json", action="store_true", help="print machine-readable JSON")
     temp_upload.set_defaults(func=cmd_temp_source_upload)
 
-    temp_list = temp_sub.add_parser("list")
-    temp_list.add_argument("--repo", default=".")
-    temp_list.add_argument("--kind", default="")
-    temp_list.add_argument("--json", action="store_true")
+    temp_list = temp_sub.add_parser("list", help="list recorded temporary sources")
+    temp_list.add_argument("--repo", default=".", help="project root (default: current directory)")
+    temp_list.add_argument("--kind", default="", help="filter by temporary source kind")
+    temp_list.add_argument("--json", action="store_true", help="print machine-readable JSON")
     temp_list.set_defaults(func=cmd_temp_source_list)
 
-    temp_cleanup = temp_sub.add_parser("cleanup")
-    temp_cleanup.add_argument("--repo", default=".")
-    temp_cleanup.add_argument("--kind", default="")
-    temp_cleanup.add_argument("--set-id", default="")
-    temp_cleanup.add_argument("--expired", action="store_true")
-    temp_cleanup.add_argument("--include-untracked-prefix", action="store_true")
-    temp_cleanup.add_argument("--yes", action="store_true")
-    temp_cleanup.add_argument("--json", action="store_true")
+    temp_cleanup = temp_sub.add_parser("cleanup", help="delete recorded temporary sources")
+    temp_cleanup.add_argument("--repo", default=".", help="project root (default: current directory)")
+    temp_cleanup.add_argument("--kind", default="", help="filter by temporary source kind")
+    temp_cleanup.add_argument("--set-id", default="", help="filter by temporary source-set ID")
+    temp_cleanup.add_argument("--expired", action="store_true", help="clean only expired temporary sources")
+    temp_cleanup.add_argument("--include-untracked-prefix", action="store_true", help="also delete untracked prefix matches; requires --yes")
+    temp_cleanup.add_argument("--yes", action="store_true", help="confirm deletion")
+    temp_cleanup.add_argument("--json", action="store_true", help="print machine-readable JSON")
     temp_cleanup.set_defaults(func=cmd_temp_source_cleanup)
     return parser
 
