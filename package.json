@@ -9,6 +9,8 @@
   "scripts": {
     "memdex": "bun packages/memdex/bin/memdex.js",
     "check": "cd packages/memdex && bun run check",
-    "test": "cd packages/memdex && bun run test"
+    "test": "cd packages/memdex && bun run test",
+    "release": "bun scripts/release.ts",
+    "release:check": "bun scripts/release.ts --precheck"
   }
 }

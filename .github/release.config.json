@@ -1,0 +1,27 @@
+{
+  "defaultBranch": "main",
+  "remote": "origin",
+  "tagPrefix": "v",
+  "versionFiles": [
+    "packages/memdex/package.json"
+  ],
+  "lockfiles": [
+    "bun.lock"
+  ],
+  "lockfileCommand": [
+    "bun",
+    "install",
+    "--lockfile-only"
+  ],
+  "checkCommand": [
+    "bun",
+    "run",
+    "check"
+  ],
+  "commitMessage": "chore: release {tag}",
+  "publishMode": "npm",
+  "publishPackage": "memdex",
+  "publishRegistry": "https://registry.npmjs.org",
+  "reuseFailedVersion": true,
+  "releaseBranchPrefix": "release/"
+}
