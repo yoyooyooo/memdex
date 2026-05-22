@@ -108,7 +108,8 @@ Default mode is `replace`:
 1. Build a whole-file chunk plan from `include`, `safety.never_upload`, and
    `bundle.groups`.
 2. Prefer previous active chunk membership when the same files still exist and
-   the chunk remains under `max_chunk_bytes`; this limits boundary churn.
+   the chunk remains under `target_chunk_bytes`; single-file chunks may exceed
+   target up to `max_chunk_bytes`.
 3. Render each chunk with `repomix --stdin` and compute `contentSha256`.
 4. Reuse previous ready NotebookLM sources with identical `contentSha256`.
 5. Upload changed/new chunks with bounded `upload_parallelism`.

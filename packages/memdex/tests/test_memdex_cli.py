@@ -58,6 +58,24 @@ class MemdexCliTest(unittest.TestCase):
         self.assertIn("--create-notebook", init_help)
         self.assertIn("create the NotebookLM notebook", init_help)
 
+    def test_default_chunk_target_is_512_kib(self) -> None:
+        config = memdex.default_config(Path("/tmp/repo"))
+
+        self.assertEqual(config["bundle"]["target_chunk_bytes"], 524288)
+
+    def test_missing_chunk_target_falls_back_to_512_kib(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            (repo / "docs").mkdir()
+            (repo / "docs/a.md").write_text("a" * 300_000)
+            (repo / "docs/b.md").write_text("b" * 300_000)
+            config = memdex.default_config(repo)
+            config["bundle"].pop("target_chunk_bytes")
+
+            chunks = memdex.plan_bundle_chunks(repo, config, set_id="2605200912")
+
+        self.assertEqual([chunk["files"] for chunk in chunks], [["docs/a.md"], ["docs/b.md"]])
+
     def test_plan_chunked_bundles_keeps_whole_files_under_named_groups(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
@@ -200,6 +218,29 @@ class MemdexCliTest(unittest.TestCase):
         self.assertEqual(second[0]["files"], ["docs/a.md", "docs/b.md"])
         self.assertIn("docs/aa.md", [path for chunk in second[1:] for path in chunk["files"]])
 
+    def test_sticky_chunk_plan_recuts_previous_members_when_target_shrinks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            (repo / "docs").mkdir()
+            (repo / "docs/a.md").write_text("a" * 300_000)
+            (repo / "docs/b.md").write_text("b" * 300_000)
+            config = memdex.default_config(repo)
+            config["bundle"].update(
+                {
+                    "target_chunk_bytes": 700_000,
+                    "max_chunk_bytes": 900_000,
+                    "groups": [{"id": "docs", "include": ["docs/**"]}],
+                }
+            )
+            first = memdex.plan_bundle_chunks(repo, config, set_id="2605200912")
+            state = {"activeSourceSet": {"sources": [{"group": c["group"], "chunk": c["chunk"], "files": c["files"]} for c in first]}}
+            config["bundle"]["target_chunk_bytes"] = 524288
+
+            second = memdex.plan_bundle_chunks(repo, config, set_id="2605200913", state=state)
+
+        self.assertEqual([chunk["files"] for chunk in first], [["docs/a.md", "docs/b.md"]])
+        self.assertEqual([chunk["files"] for chunk in second], [["docs/a.md"], ["docs/b.md"]])
+
     def test_upload_bundle_set_reuses_unchanged_chunk_and_uploads_only_changed_chunks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
@@ -261,8 +302,11 @@ class MemdexCliTest(unittest.TestCase):
             deleted: list[str] = []
 
             def fake_run(argv, cwd, *, input_text=None, timeout=None):
-                if argv[:3] == ["/bin/notebooklm", "source", "add"]:
+                if argv[:4] == ["/bin/notebooklm", "source", "add", "-"]:
                     title = argv[argv.index("--title") + 1]
+                    self.assertIn("--type", argv)
+                    self.assertEqual(argv[argv.index("--type") + 1], "text")
+                    self.assertEqual(input_text, "new")
                     uploaded.append(title)
                     return subprocess.CompletedProcess(argv, 0, '{"id":"new-2-id","title":"new-2.md"}', "")
                 if argv[:3] == ["/bin/notebooklm", "source", "wait"]:
@@ -315,7 +359,10 @@ class MemdexCliTest(unittest.TestCase):
 
             def fake_run(argv, cwd, *, input_text=None, timeout=None):
                 nonlocal active, max_active
-                if argv[:3] == ["/bin/notebooklm", "source", "add"]:
+                if argv[:4] == ["/bin/notebooklm", "source", "add", "-"]:
+                    self.assertIn("--type", argv)
+                    self.assertEqual(argv[argv.index("--type") + 1], "text")
+                    self.assertIn(input_text, {"0", "1", "2"})
                     with lock:
                         active += 1
                         max_active = max(max_active, active)
@@ -500,8 +547,10 @@ class MemdexCliTest(unittest.TestCase):
 
             def fake_run(argv, cwd, *, input_text=None, timeout=None):
                 calls.append(argv)
-                if argv[:3] == ["/bin/notebooklm", "source", "add"]:
-                    self.assertIn(".memdex/cache/memdextmp--", argv[3])
+                if argv[:4] == ["/bin/notebooklm", "source", "add", "-"]:
+                    self.assertEqual(input_text, "# Flashcard seed\n")
+                    self.assertIn("--type", argv)
+                    self.assertEqual(argv[argv.index("--type") + 1], "text")
                     title = argv[argv.index("--title") + 1]
                     return subprocess.CompletedProcess(argv, 0, f'{{"id":"tmp-1","title":"{title}"}}', "")
                 if argv[:3] == ["/bin/notebooklm", "source", "wait"]:

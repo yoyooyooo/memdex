@@ -47,7 +47,7 @@ PyYAML is installed.
     "output": ".memdex/cache/{prefix}-{timestamp}.txt",
     "style": "",
     "compress": false,
-    "target_chunk_bytes": 716800,
+    "target_chunk_bytes": 524288,
     "max_chunk_bytes": 900000,
     "source_title_template": "{prefix}--{set}--{group}--{chunk}--{hash}.md",
     "groups": [
@@ -239,9 +239,10 @@ and keeps failures for a later retry.
 
 Chunked refresh is incremental. Each source records rendered chunk
 `contentSha256` plus `fileListSha256` and `files`. The next plan keeps previous
-whole-file chunk membership when it still fits under `max_chunk_bytes`; chunks
-with identical `contentSha256` reuse the previous ready NotebookLM source ID.
-Only changed or new chunks are uploaded.
+whole-file chunk membership when it still fits under `target_chunk_bytes`; a
+single file may still occupy a larger chunk up to `max_chunk_bytes`. Chunks with
+identical `contentSha256` reuse the previous ready NotebookLM source ID. Only
+changed or new chunks are uploaded.
 
 Temporary source sets are derived NotebookLM materials, for example flashcard
 seeds created from selected chunks/files. They are independent from

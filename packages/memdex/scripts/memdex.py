@@ -282,7 +282,7 @@ def default_config(
             "output": f"{CONFIG_DIR}/cache/{{prefix}}-{{timestamp}}.txt",
             "style": "",
             "compress": False,
-            "target_chunk_bytes": 716800,
+            "target_chunk_bytes": 524288,
             "max_chunk_bytes": 900000,
             "source_title_template": "{prefix}--{set}--{group}--{chunk}--{hash}.md",
             "groups": default_groups(),
@@ -717,13 +717,12 @@ def plan_group_chunks(
         retained = [path for path in previous_files if path in available]
         if not retained:
             continue
-        total = sum(chunk_file_size(repo, path) for path in retained)
-        if any(chunk_file_size(repo, path) > max_bytes for path in retained):
-            for path in retained:
-                size = chunk_file_size(repo, path)
-                if size > max_bytes:
-                    die(f"file exceeds max chunk size ({max_bytes} bytes): {path} ({size} bytes)")
-        if total <= max_bytes:
+        sizes = {path: chunk_file_size(repo, path) for path in retained}
+        for path, size in sizes.items():
+            if size > max_bytes:
+                die(f"file exceeds max chunk size ({max_bytes} bytes): {path} ({size} bytes)")
+        total = sum(sizes.values())
+        if total <= target or len(retained) == 1:
             kept.append(retained)
             for path in retained:
                 available.discard(path)
@@ -750,7 +749,7 @@ def plan_group_chunks(
 
 def plan_bundle_chunks(repo: Path, config: dict[str, Any], *, set_id: str, state: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     bundle = config.get("bundle", {})
-    target = parse_size_bytes(bundle.get("target_chunk_bytes"), 716800)
+    target = parse_size_bytes(bundle.get("target_chunk_bytes"), 524288)
     max_bytes = parse_size_bytes(bundle.get("max_chunk_bytes"), 900000)
     if target > max_bytes:
         target = max_bytes
@@ -1044,15 +1043,34 @@ def source_from_add_json(stdout: str, bundle: Path, title_hint: str | None = Non
     return None
 
 
+def upload_text_source_from_file(repo: Path, config: dict[str, Any], path: Path, title: str) -> dict[str, Any]:
+    nbid = notebook_id(config)
+    try:
+        content = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as error:
+        die(f"source is not valid UTF-8 text for {title}: {error}")
+    result = run(
+        [*notebooklm_cmd(), "source", "add", "-", "-n", nbid, "--type", "text", "--title", title, "--json"],
+        repo,
+        input_text=content,
+        timeout=600,
+    )
+    if result.returncode != 0:
+        die(f"notebooklm source add failed for {title}:\n{result.stdout}\n{result.stderr}")
+    source = source_from_add_json(result.stdout, path, title) or find_source_by_title(repo, nbid, title)
+    if not source or not source.get("id"):
+        die(f"uploaded source but could not resolve source id for {title}")
+    return source
+
+
 def upload_bundle(repo: Path, config: dict[str, Any], state: dict[str, Any], bundle: Path, bundle_hash: str) -> dict[str, Any]:
     nbid = notebook_id(config)
     prefix = str(config.get("notebooklm", {}).get("source_title_prefix") or bundle.stem)
     before = list_sources(repo, nbid)
-    result = run([*notebooklm_cmd(), "source", "add", str(bundle), "-n", nbid, "--json"], repo, timeout=600)
-    if result.returncode != 0:
-        die(f"notebooklm source add failed:\n{result.stdout}\n{result.stderr}")
+    source = upload_text_source_from_file(repo, config, bundle, bundle.name)
     after = list_sources(repo, nbid)
-    source = source_from_add_json(result.stdout, bundle) or find_uploaded_source(before, after, bundle, prefix)
+    if not source.get("id"):
+        source = find_uploaded_source(before, after, bundle, prefix)
     source.update({"bundleSha256": bundle_hash, "uploadedAt": iso()})
 
     if config.get("notebooklm", {}).get("wait_after_upload") and source.get("id"):
@@ -1068,14 +1086,7 @@ def upload_bundle(repo: Path, config: dict[str, Any], state: dict[str, Any], bun
 
 
 def upload_file_source(repo: Path, config: dict[str, Any], path: Path, title: str) -> dict[str, Any]:
-    nbid = notebook_id(config)
-    result = run([*notebooklm_cmd(), "source", "add", str(path), "-n", nbid, "--title", title, "--json"], repo, timeout=600)
-    if result.returncode != 0:
-        die(f"notebooklm source add failed for {title}:\n{result.stdout}\n{result.stderr}")
-    source = source_from_add_json(result.stdout, path, title) or find_source_by_title(repo, nbid, title)
-    if not source or not source.get("id"):
-        die(f"uploaded source but could not resolve source id for {title}")
-    return source
+    return upload_text_source_from_file(repo, config, path, title)
 
 
 def wait_source_ready(repo: Path, nbid: str, source_id: str) -> bool:
@@ -1138,15 +1149,9 @@ def source_with_chunk_metadata(source: dict[str, Any], bundle: dict[str, Any], *
 
 
 def upload_one_chunk(repo: Path, config: dict[str, Any], bundle: dict[str, Any]) -> dict[str, Any]:
-    nbid = notebook_id(config)
     path = Path(str(bundle["path"]))
     title = str(bundle["title"])
-    result = run([*notebooklm_cmd(), "source", "add", str(path), "-n", nbid, "--title", title, "--json"], repo, timeout=600)
-    if result.returncode != 0:
-        die(f"notebooklm source add failed for chunk {title}:\n{result.stdout}\n{result.stderr}")
-    source = source_from_add_json(result.stdout, path, title) or find_source_by_title(repo, nbid, title)
-    if not source or not source.get("id"):
-        die(f"uploaded chunk but could not resolve source id for {title}")
+    source = upload_text_source_from_file(repo, config, path, title)
     return source_with_chunk_metadata(source, bundle, status="uploaded")
 
 
