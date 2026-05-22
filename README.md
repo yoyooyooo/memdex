@@ -78,7 +78,8 @@ next-step commands point at your wrapper.
 
 ## Requirements
 
-- Python 3.10+
+- Node.js 20+
+- Bun 1.2+ for local development and package builds
 - `git`
 - `rg` for local line verification
 - `repomix` or `npx repomix`
@@ -175,9 +176,9 @@ bun run test
 bun run check
 ```
 
-The control plane intentionally depends only on the Python standard library.
-Provider, packaging, and search work happens through subprocess calls to
-external tools.
+The CLI is implemented in TypeScript, uses Commander for command routing, and
+is bundled with Bun for npm packaging. Provider, packaging, and search work
+happens through subprocess calls to external tools.
 
 CI and npm publishing are documented in [docs/release.md](docs/release.md).
 

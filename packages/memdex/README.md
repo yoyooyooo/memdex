@@ -2,12 +2,11 @@
 
 CLI package for `memdex`.
 
-It wraps a Python stdlib control-plane script with an npm `bin` entry named
-`memdex`.
+It is implemented in TypeScript, uses Commander for the command surface, and is
+bundled with Bun into an npm `bin` entry named `memdex`.
 
 ## Requirements
 
-- Python 3.10+
 - `git`
 - `rg`
 - `repomix` or `npx repomix`
@@ -27,8 +26,6 @@ From the monorepo checkout:
 bun run memdex -- --help
 bun run memdex -- ask --repo /path/to/repo "Where is retry/backfill documented?"
 ```
-
-Set `PYTHON` to choose a specific Python executable.
 
 Release and CI details live in the repository-level
 [release process](https://github.com/yoyooyooo/memdex/blob/main/docs/release.md).

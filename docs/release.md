@@ -12,7 +12,7 @@ Every pull request and every push to `main` runs:
 - `bun run memdex -- --help`
 - `npm pack --dry-run --json`
 
-CI tests Python 3.10 through 3.14 on Ubuntu.
+CI runs on Ubuntu with Bun 1.2.17 and Node.js 24.
 
 ## npm Publishing
 

@@ -1,8 +1,8 @@
 # Memdex Config Schema
 
-The project config lives in `.memdex/config.json` by default. JSON is
-the default because it works with Python stdlib. YAML may be read only when
-PyYAML is installed.
+The project config lives in `.memdex/config.json` by default. JSON is the
+default. `.yaml` / `.yml` configs are also accepted through the bundled YAML
+parser.
 
 ## `config.json`
 

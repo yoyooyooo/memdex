@@ -27,20 +27,26 @@
   },
   "files": [
     "bin/memdex.js",
+    "dist",
     "LICENSE",
-    "scripts/memdex.py",
     "README.md"
   ],
   "scripts": {
-    "memdex": "bun ./bin/memdex.js",
-    "check": "python3 -m py_compile scripts/memdex.py && python3 tests/test_memdex_cli.py",
-    "test": "python3 tests/test_memdex_cli.py"
+    "build": "rm -rf dist && bun build src/cli.ts --target=node --format=esm --packages=external --outdir=dist",
+    "memdex": "bun ./src/cli.ts",
+    "check": "bun test && bun run build && node ./bin/memdex.js --help >/dev/null",
+    "test": "bun test",
+    "prepack": "bun run build"
+  },
+  "dependencies": {
+    "commander": "^14.0.3",
+    "yaml": "^2.9.0"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }

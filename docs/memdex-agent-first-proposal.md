@@ -281,8 +281,8 @@ status/ensure 不再出现在默认问答路径。
 落地文件：
 
 ```text
-packages/memdex/scripts/memdex.py
-packages/memdex/tests/test_memdex_cli.py
+packages/memdex/src/
+packages/memdex/tests/memdex.test.ts
 skills/memdex/SKILL.md
 skills/memdex/references/workflow.md
 ```

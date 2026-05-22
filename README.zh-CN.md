@@ -73,7 +73,8 @@ bun run memdex -- --help
 
 ## 环境要求
 
-- Python 3.10+
+- Node.js 20+
+- Bun 1.2+，用于本地开发和 package build
 - `git`
 - `rg`，用于本地行号校验
 - `repomix` 或 `npx repomix`
@@ -165,8 +166,8 @@ bun run test
 bun run check
 ```
 
-控制面脚本刻意只依赖 Python 标准库。Provider、打包和搜索能力通过 subprocess
-调用外部工具完成。
+CLI 使用 TypeScript 实现，通过 Commander 组织命令面，并用 Bun 打包用于
+npm 发布。Provider、打包和搜索能力仍通过 subprocess 调用外部工具完成。
 
 CI 和 npm 发布流程见 [docs/release.md](docs/release.md)。
 

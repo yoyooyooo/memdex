@@ -37,3 +37,16 @@
   it fit under `max_chunk_bytes`. This is part of the same chunk-size migration.
 - Scope limit: keep the change inside chunk planning; do not add new upload or
   provider behavior here before extracting the monolithic script.
+
+## 2026-05-22 TypeScript Build Output Guard
+
+- File: `packages/memdex/bin/memdex.js`
+- Observed generated size: 11093 LOC after a bundled Bun build, above the default
+  1500 LOC block budget.
+- Exception: allow immediate shrink/replacement of the generated file with a
+  small launcher, and move compiled output out of `bin/`.
+- Rationale: the oversized file is generated build output from the Python-to-TS
+  migration attempt, not intended source. Keeping it in `bin/` makes review and
+  LOC guard behavior worse.
+- Scope limit: do not keep bundled vendor code in tracked `bin/`; `bin/` should
+  remain a short executable launcher.
