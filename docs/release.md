@@ -10,7 +10,7 @@ Every pull request and every push to `main` runs:
 - `bun install --frozen-lockfile`
 - `bun run check`
 - `bun run memdex -- --help`
-- `bun pm pack --dry-run`
+- `npm pack --dry-run --json`
 
 CI tests Python 3.10 through 3.14 on Ubuntu.
 
@@ -18,9 +18,18 @@ CI tests Python 3.10 through 3.14 on Ubuntu.
 
 Publishing is handled by `.github/workflows/publish.yml`.
 
-The workflow runs on a published GitHub Release or manual `workflow_dispatch`.
+The workflow runs on a published GitHub Release or manual `workflow_dispatch`
+with an explicit tag input.
 It uses npm Trusted Publishing through GitHub OIDC, so no long-lived npm token
 should be stored once the package is connected to npm.
+
+Release guards:
+
+- The tag must start with `v`.
+- The tag must equal `v${packages/memdex/package.json.version}`.
+- `packages/memdex/package.json.name` must be `memdex`.
+- The same package version must not already exist on npm.
+- The package is dry-run packed with `npm pack --dry-run --json` before publish.
 
 Required npm setup:
 
@@ -39,6 +48,16 @@ Before creating a GitHub Release:
 2. Run `bun install` so `bun.lock` records the same workspace version.
 3. Run `bun run check`.
 4. Commit the version bump.
-5. Create and publish a GitHub Release for that commit.
+5. Push to `main` and wait for CI to pass.
+6. Create and publish a GitHub Release for that commit.
+
+The GitHub Release tag must match the package version. For version `0.1.1`, use
+tag `v0.1.1`.
 
 The release workflow verifies the package again before running `npm publish`.
+
+Manual publish rerun path:
+
+```bash
+gh workflow run publish.yml --repo yoyooyooo/memdex -f tag=v0.1.1
+```

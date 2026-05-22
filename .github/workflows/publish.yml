@@ -5,6 +5,11 @@ on:
     types:
       - published
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, for example v0.1.1
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -21,8 +26,30 @@ jobs:
     environment: npm-publish
 
     steps:
+      - name: Resolve release tag
+        id: release
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          tag="${RELEASE_TAG:-$DISPATCH_TAG}"
+          if [ -z "$tag" ]; then
+            echo "Release tag is required." >&2
+            exit 1
+          fi
+          case "$tag" in
+            v*) ;;
+            *)
+              echo "Release tag must start with v, got: $tag" >&2
+              exit 1
+              ;;
+          esac
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.release.outputs.tag }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -44,16 +71,41 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
+      - name: Validate release metadata
+        id: package
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          package_name="$(node -p "require('./packages/memdex/package.json').name")"
+          package_version="$(node -p "require('./packages/memdex/package.json').version")"
+          expected_tag="v${package_version}"
+
+          if [ "$package_name" != "memdex" ]; then
+            echo "Expected package name memdex, got: $package_name" >&2
+            exit 1
+          fi
+          if [ "$RELEASE_TAG" != "$expected_tag" ]; then
+            echo "Release tag must match package version. tag=$RELEASE_TAG expected=$expected_tag" >&2
+            exit 1
+          fi
+          if npm view "${package_name}@${package_version}" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "${package_name}@${package_version} already exists on npm." >&2
+            exit 1
+          fi
+
+          echo "name=$package_name" >> "$GITHUB_OUTPUT"
+          echo "version=$package_version" >> "$GITHUB_OUTPUT"
+
       - name: Check
         run: bun run check
 
       - name: CLI smoke
         run: bun run memdex -- --help
 
-      - name: Package dry run
+      - name: npm package dry run
         working-directory: packages/memdex
-        run: bun pm pack --dry-run
+        run: npm pack --dry-run --json
 
       - name: Publish
         working-directory: packages/memdex
-        run: npm publish --access public --provenance
+        run: npm publish --registry https://registry.npmjs.org --access public --provenance

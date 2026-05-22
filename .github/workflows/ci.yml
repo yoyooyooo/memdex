@@ -51,6 +51,6 @@ jobs:
       - name: CLI smoke
         run: bun run memdex -- --help
 
-      - name: Package dry run
+      - name: npm package dry run
         working-directory: packages/memdex
-        run: bun pm pack --dry-run
+        run: npm pack --dry-run --json
