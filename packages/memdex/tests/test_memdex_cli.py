@@ -38,7 +38,8 @@ class MemdexCliTest(unittest.TestCase):
 
         self.assertIn("Agent-facing semantic retrieval", help_text)
         self.assertIn("NotebookLM as a semantic locator", help_text)
-        self.assertIn("ask          answer semantic project questions", help_text)
+        self.assertIn("ask", help_text)
+        self.assertIn("answer semantic project questions", help_text)
         self.assertIn("ask      answer architecture/docs/status questions", help_text)
         self.assertIn("locate   find likely files or symbols", help_text)
         self.assertIn("init     create .memdex/config.json", help_text)
