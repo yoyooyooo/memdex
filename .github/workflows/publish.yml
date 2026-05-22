@@ -78,11 +78,20 @@ jobs:
           npm publish --registry https://registry.npmjs.org --access public --provenance
       - name: Verify npm package
         run: |
-          published_version="$(npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version --registry https://registry.npmjs.org)"
-          if [ "$published_version" != "$PACKAGE_VERSION" ]; then
-            echo "npm registry version mismatch. got=$published_version expected=$PACKAGE_VERSION" >&2
-            exit 1
-          fi
+          for attempt in 1 2 3 4 5 6; do
+            if published_version="$(npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version --registry https://registry.npmjs.org 2>/tmp/npm-view.err)"; then
+              if [ "$published_version" = "$PACKAGE_VERSION" ]; then
+                exit 0
+              fi
+              echo "npm registry version mismatch. got=$published_version expected=$PACKAGE_VERSION" >&2
+              exit 1
+            fi
+            if [ "$attempt" = "6" ]; then
+              cat /tmp/npm-view.err >&2
+              exit 1
+            fi
+            sleep "$((attempt * 5))"
+          done
       - name: Generate release notes
         run: |
           git fetch --tags --force
