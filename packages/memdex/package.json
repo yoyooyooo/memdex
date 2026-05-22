@@ -4,14 +4,14 @@
   "description": "Agent-facing semantic retrieval for local projects and source sets using NotebookLM, repomix snapshots, freshness checks, and local verification.",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://github.com/yoyooyooo/codebase-retrieve#readme",
+  "homepage": "https://github.com/yoyooyooo/memdex#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yoyooyooo/codebase-retrieve.git",
+    "url": "git+https://github.com/yoyooyooo/memdex.git",
     "directory": "packages/memdex"
   },
   "bugs": {
-    "url": "https://github.com/yoyooyooo/codebase-retrieve/issues"
+    "url": "https://github.com/yoyooyooo/memdex/issues"
   },
   "keywords": [
     "agent",
