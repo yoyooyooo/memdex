@@ -30,6 +30,7 @@ status -> ensure -> ask / locate
 ```bash
 memdex ask --repo . "question"
 memdex locate --repo . "thing to find"
+memdex ask --repo-worktree main "question"
 ```
 
 `status` / `ensure` / `refresh` 不删除，但下沉为维护命令：
@@ -180,6 +181,8 @@ refresh
 用户明确授权首次上传 -> ask --yes 或 ensure --yes
 用户明确要求强刷新 -> ask --force-refresh / locate --force-refresh / refresh --force
 provider 输出 stale path -> locate 本地校验或 fallback rg
+轻量 worktree 只读复用主索引 -> ask/locate --repo-worktree main
+明确要刷新目标索引 worktree -> ask/locate --repo-worktree main --force-refresh
 ```
 
 ## locate 终局能力

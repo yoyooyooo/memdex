@@ -119,6 +119,20 @@ bun run memdex -- locate \
   "invoice export retry command"
 ```
 
+When working from a lightweight Git worktree, reuse the checked-out `main`
+worktree index instead of uploading the feature worktree:
+
+```bash
+bun run memdex -- ask \
+  --repo-worktree main \
+  "Where is retry/backfill documented?"
+```
+
+`--repo-worktree` must run from inside a Git worktree. It reuses the recorded
+index without auto-refresh; pass `--force-refresh` only when you intentionally
+want to update the indexed branch worktree. If the branch is not checked out as
+a worktree, pass the indexed path explicitly with `--repo`.
+
 First broad upload is intentionally blocked unless approved. After reviewing
 the source scope, rerun with `--yes`:
 

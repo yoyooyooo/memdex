@@ -4,7 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildProgram } from "../src/cli";
 import { buildBundleSet, planBundleChunks, repomixBaseArgv } from "../src/chunking";
-import { defaultConfig, resetTestHooks, setTestHooks, writeJson, type RunResult } from "../src/common";
+import { cmdAsk } from "../src/commands";
+import { defaultConfig, MemdexError, resetTestHooks, setTestHooks, writeJson, type RunResult } from "../src/common";
 import { askProvider } from "../src/retrieval";
 import { uploadBundleSet } from "../src/notebooklm";
 
@@ -29,6 +30,183 @@ describe("memdex ts cli", () => {
     expect(help).toContain("ask");
     expect(help).toContain("locate");
     expect(help).toContain("init");
+    const program = buildProgram();
+    expect(program.commands.find((command) => command.name() === "ask")?.helpInformation()).toContain("--repo-worktree <branch>");
+    expect(program.commands.find((command) => command.name() === "locate")?.helpInformation()).toContain("--repo-worktree <branch>");
+  });
+
+  test("ask can resolve a sibling main worktree for retrieval", async () => {
+    const root = tempRepo();
+    const mainRepo = join(root, "main");
+    const featureRepo = join(root, "feature");
+    const oldCwd = process.cwd();
+    try {
+      mkdirSync(join(mainRepo, ".memdex"), { recursive: true });
+      mkdirSync(featureRepo, { recursive: true });
+      const config = defaultConfig(mainRepo, "nb-1");
+      writeJson(join(mainRepo, ".memdex/config.json"), config);
+      writeJson(join(mainRepo, ".memdex/state.local.json"), {
+        lastUploadedAt: "2099-01-01T00:00:00Z",
+        activeSourceSet: { sources: [{ id: "src-ready", status: "ready" }] },
+      });
+      process.chdir(featureRepo);
+      let notebooklmCwd = "";
+      setTestHooks({
+        notebooklmCmd: () => ["/bin/notebooklm"],
+        run: async (argv, cwd) => {
+          if (argv.join(" ") === "git rev-parse --show-toplevel") return ok(argv, featureRepo);
+          if (argv.join(" ") === "git worktree list --porcelain") {
+            return ok(argv, `worktree ${mainRepo}\nHEAD 1111111\nbranch refs/heads/main\n\nworktree ${featureRepo}\nHEAD 2222222\nbranch refs/heads/feature\n`);
+          }
+          if (argv.join(" ") === "git rev-parse HEAD") return ok(argv, "1111111");
+          if (argv.join(" ") === "git status --porcelain=v1 -z --untracked-files=all") return ok(argv, "");
+          if (argv.join(" ") === "git ls-files -co --exclude-standard") return ok(argv, "README.md\n");
+          if (argv.slice(0, 3).join(" ") === "/bin/notebooklm ask question") {
+            notebooklmCwd = cwd;
+            return ok(argv, '{"answer":"ok"}');
+          }
+          return ok(argv, "");
+        },
+      });
+
+      await cmdAsk("question", { repoWorktree: "main" });
+
+      expect(notebooklmCwd).toBe(mainRepo);
+    } finally {
+      process.chdir(oldCwd);
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("repo-worktree reuses recorded sources without refreshing by default", async () => {
+    const root = tempRepo();
+    const mainRepo = join(root, "main");
+    const featureRepo = join(root, "feature");
+    const oldCwd = process.cwd();
+    try {
+      mkdirSync(join(mainRepo, ".memdex"), { recursive: true });
+      mkdirSync(featureRepo, { recursive: true });
+      writeFileSync(join(mainRepo, "README.md"), "fermi\n");
+      const config = defaultConfig(mainRepo, "nb-1");
+      writeJson(join(mainRepo, ".memdex/config.json"), config);
+      writeJson(join(mainRepo, ".memdex/state.local.json"), {
+        lastUploadedAt: "2000-01-01T00:00:00Z",
+        activeSourceSet: { sources: [{ id: "src-ready", status: "ready" }] },
+      });
+      process.chdir(featureRepo);
+      let providerCalled = false;
+      setTestHooks({
+        notebooklmCmd: () => ["/bin/notebooklm"],
+        repomixCmd: () => ["/bin/repomix"],
+        run: async (argv) => {
+          if (argv.join(" ") === "git rev-parse --show-toplevel") return ok(argv, featureRepo);
+          if (argv.join(" ") === "git worktree list --porcelain") {
+            return ok(argv, `worktree ${mainRepo}\nHEAD 1111111\nbranch refs/heads/main\n\nworktree ${featureRepo}\nHEAD 2222222\nbranch refs/heads/feature\n`);
+          }
+          if (argv.join(" ") === "git rev-parse HEAD") return ok(argv, "1111111");
+          if (argv.join(" ") === "git status --porcelain=v1 -z --untracked-files=all") return ok(argv, "");
+          if (argv.join(" ") === "git ls-files -co --exclude-standard") return ok(argv, "README.md\n");
+          if (argv.slice(0, 3).join(" ") === "/bin/notebooklm ask question") {
+            providerCalled = true;
+            return ok(argv, '{"answer":"ok"}');
+          }
+          if (argv[0] === "/bin/repomix" || argv.slice(0, 4).join(" ") === "/bin/notebooklm source add -") {
+            throw new Error(`unexpected refresh for repo-worktree: ${argv.join(" ")}`);
+          }
+          return ok(argv, "");
+        },
+      });
+
+      await cmdAsk("question", { repoWorktree: "main" });
+
+      expect(providerCalled).toBe(true);
+    } finally {
+      process.chdir(oldCwd);
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("repo-worktree yes can approve first upload for the indexed worktree", async () => {
+    const root = tempRepo();
+    const mainRepo = join(root, "main");
+    const featureRepo = join(root, "feature");
+    const oldCwd = process.cwd();
+    try {
+      mkdirSync(join(mainRepo, ".memdex"), { recursive: true });
+      mkdirSync(featureRepo, { recursive: true });
+      writeFileSync(join(mainRepo, "README.md"), "fermi\n");
+      const config = defaultConfig(mainRepo, "nb-1");
+      writeJson(join(mainRepo, ".memdex/config.json"), config);
+      writeJson(join(mainRepo, ".memdex/state.local.json"), { sources: [] });
+      process.chdir(featureRepo);
+      let uploaded = false;
+      let providerCall: string[] = [];
+      setTestHooks({
+        notebooklmCmd: () => ["/bin/notebooklm"],
+        repomixCmd: () => ["/bin/repomix"],
+        run: async (argv) => {
+          if (argv.join(" ") === "git rev-parse --show-toplevel") return ok(argv, featureRepo);
+          if (argv.join(" ") === "git worktree list --porcelain") {
+            return ok(argv, `worktree ${mainRepo}\nHEAD 1111111\nbranch refs/heads/main\n\nworktree ${featureRepo}\nHEAD 2222222\nbranch refs/heads/feature\n`);
+          }
+          if (argv.join(" ") === "git rev-parse HEAD") return ok(argv, "1111111");
+          if (argv.join(" ") === "git status --porcelain=v1 -z --untracked-files=all") return ok(argv, "");
+          if (argv.join(" ") === "git ls-files -co --exclude-standard") return ok(argv, "README.md\n");
+          if (argv[0] === "/bin/repomix") {
+            writeFileSync(argv[argv.indexOf("--output") + 1], "rendered\n");
+            return ok(argv);
+          }
+          if (argv.slice(0, 4).join(" ") === "/bin/notebooklm source add -") {
+            uploaded = true;
+            return ok(argv, '{"id":"new-source","title":"new.md"}');
+          }
+          if (argv.slice(0, 3).join(" ") === "/bin/notebooklm source wait") return ok(argv);
+          if (argv.slice(0, 3).join(" ") === "/bin/notebooklm ask question") {
+            providerCall = argv;
+            return ok(argv, '{"answer":"ok"}');
+          }
+          return ok(argv, "");
+        },
+      });
+
+      await cmdAsk("question", { repoWorktree: "main", yes: true });
+
+      expect(uploaded).toBe(true);
+      expect(providerCall).toContain("new-source");
+    } finally {
+      process.chdir(oldCwd);
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("repo-worktree outside git reports an agent-actionable next step", async () => {
+    const repo = tempRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(repo);
+      setTestHooks({
+        run: async (argv) => {
+          if (argv.join(" ") === "git rev-parse --show-toplevel") return { argv, returncode: 128, stdout: "", stderr: "fatal: not a git repository" };
+          return ok(argv, "");
+        },
+      });
+
+      const error = await cmdAsk("question", { repoWorktree: "main" }).catch((caught) => caught);
+
+      expect(error).toBeInstanceOf(MemdexError);
+      expect(error.message).toContain("--repo-worktree requires cwd inside a Git worktree");
+      expect(error.message).toContain("memdex ask --repo /path/to/main");
+    } finally {
+      process.chdir(oldCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test("repo-worktree cannot be combined with repo", async () => {
+    const error = await cmdAsk("question", { repo: "/tmp/main", repoWorktree: "main" }).catch((caught) => caught);
+
+    expect(error).toBeInstanceOf(MemdexError);
+    expect(error.message).toContain("choose either --repo or --repo-worktree");
   });
 
   test("default chunk target is 512 KiB and missing target falls back to it", async () => {

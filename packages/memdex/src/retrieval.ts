@@ -151,6 +151,11 @@ export function freshnessWarning(freshness: JsonObject): string | null {
   }
   if (status === "needs-first-upload-approval") return "warning: first broad upload requires approval; rerun with --yes or run refresh explicitly.";
   if (status === "auto-refresh-disabled") return "warning: auto refresh is disabled; provider answer may lag local changes.";
+  if (status === "reuse-index-stale") {
+    const changed = Array.isArray(freshness.relevant_changed_paths) ? freshness.relevant_changed_paths : [];
+    const preview = changed.length ? `; changed=${changed.slice(0, 5).join(", ")}${changed.length <= 5 ? "" : `, ...(+${changed.length - 5})`}` : "";
+    return `warning: reusing recorded index without refresh${preview}; provider answer may lag local changes. Use --force-refresh only if you want to update the indexed worktree.`;
+  }
   return null;
 }
 
@@ -172,8 +177,8 @@ export function providerBlockPayload(freshness: JsonObject, nextSteps?: JsonObje
   return { error: true, message: providerBlockMessage(freshness) || "skipped", ...(next ? { next } : {}) };
 }
 
-export async function locate(repo: string, query: string, opts: { forceRefresh?: boolean; yes?: boolean; json?: boolean; includeProviderAnswer?: boolean }): Promise<JsonObject> {
-  const freshness = await ensureIndex(repo, { force: opts.forceRefresh, yes: opts.yes, jsonOutput: opts.json, command: "locate", returnUninitialized: true });
+export async function locate(repo: string, query: string, opts: { forceRefresh?: boolean; yes?: boolean; json?: boolean; includeProviderAnswer?: boolean; reuseOnly?: boolean }): Promise<JsonObject> {
+  const freshness = await ensureIndex(repo, { force: opts.forceRefresh, yes: opts.yes, jsonOutput: opts.json, command: "locate", returnUninitialized: true, reuseOnly: opts.reuseOnly });
   const blocked = providerBlockMessage(freshness);
   if (blocked) {
     const next = freshness.next || (freshness.status === "needs-first-upload-approval" ? firstUploadNext(repo, "locate", query) : undefined);

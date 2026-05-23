@@ -37,7 +37,7 @@ export function stateUploadedFingerprint(state: JsonObject): string | null {
   return state.lastUploadedFastFingerprint || null;
 }
 
-export async function ensureIndex(repo: string, opts: { force?: boolean; yes?: boolean; jsonOutput?: boolean; command?: string; returnUninitialized?: boolean } = {}): Promise<JsonObject> {
+export async function ensureIndex(repo: string, opts: { force?: boolean; yes?: boolean; jsonOutput?: boolean; command?: string; returnUninitialized?: boolean; reuseOnly?: boolean } = {}): Promise<JsonObject> {
   const cfg = configPath(repo);
   if (!existsSync(cfg)) {
     if (opts.jsonOutput || opts.returnUninitialized) return uninitializedStatus(repo, cfg);
@@ -46,7 +46,7 @@ export async function ensureIndex(repo: string, opts: { force?: boolean; yes?: b
   return repoLock(repo, () => ensureIndexLocked(repo, opts));
 }
 
-export async function ensureIndexLocked(repo: string, opts: { force?: boolean; yes?: boolean; jsonOutput?: boolean; command?: string } = {}): Promise<JsonObject> {
+export async function ensureIndexLocked(repo: string, opts: { force?: boolean; yes?: boolean; jsonOutput?: boolean; command?: string; reuseOnly?: boolean } = {}): Promise<JsonObject> {
   const [config, cfgPath] = loadConfig(repo, opts.command || "ensure");
   const [state, statePath] = loadState(cfgPath);
   await recoverPendingUpload(repo, config, state);
@@ -79,6 +79,12 @@ export async function ensureIndexLocked(repo: string, opts: { force?: boolean; y
   const firstUpload = activeSources(state).length === 0;
   if (firstUpload && config.safety?.require_user_approval_first_upload !== false && !opts.yes && !opts.force) {
     return { ...result, status: "needs-first-upload-approval" };
+  }
+
+  if (!opts.force && opts.reuseOnly && !firstUpload) {
+    Object.assign(state, { lastCheckedAt: iso(), lastCheckedFastFingerprint: fastHash, lastBundlePath: null });
+    writeJson(statePath, state);
+    return { ...result, status: "reuse-index-stale", uploaded_age_seconds: uploadedAge };
   }
 
   const minInterval = Number(refresh.min_upload_interval_seconds ?? 900);

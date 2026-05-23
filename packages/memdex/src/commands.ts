@@ -40,6 +40,7 @@ import {
   withRepoLock,
 } from "./notebooklm";
 import { answerText, askProvider, firstUploadNext, freshnessWarning, locate, printCompactReferences, providerBlockMessage, providerBlockPayload } from "./retrieval";
+import { resolveRepoOption } from "./worktree";
 
 export type CommandOptions = JsonObject;
 
@@ -182,8 +183,8 @@ export function printAskResult(repo: string, freshness: JsonObject, answer: Json
 }
 
 export async function cmdAsk(question: string, opts: CommandOptions): Promise<void> {
-  const repo = resolve(String(opts.repo || "."));
-  const freshness = await ensureIndex(repo, { force: opts.forceRefresh, yes: opts.yes, jsonOutput: opts.json, command: "ask", returnUninitialized: true });
+  const repo = await resolveRepoOption(opts, "ask", question);
+  const freshness = await ensureIndex(repo, { force: opts.forceRefresh, yes: opts.yes, jsonOutput: opts.json, command: "ask", returnUninitialized: true, reuseOnly: Boolean(opts.repoWorktree) && !opts.forceRefresh });
   const blocked = providerBlockMessage(freshness);
   if (blocked) {
     const next = freshness.status === "needs-first-upload-approval" ? firstUploadNext(repo, "ask", question) : undefined;
@@ -207,7 +208,7 @@ export function printLocateResult(result: JsonObject, opts: CommandOptions): voi
 }
 
 export async function cmdLocate(query: string, opts: CommandOptions): Promise<void> {
-  printLocateResult(await locate(resolve(String(opts.repo || ".")), query, { forceRefresh: opts.forceRefresh, yes: opts.yes, json: opts.json, includeProviderAnswer: opts.includeProviderAnswer }), opts);
+  printLocateResult(await locate(await resolveRepoOption(opts, "locate", query), query, { forceRefresh: opts.forceRefresh, yes: opts.yes, json: opts.json, includeProviderAnswer: opts.includeProviderAnswer, reuseOnly: Boolean(opts.repoWorktree) && !opts.forceRefresh }), opts);
 }
 
 export async function cmdTempSourceUpload(opts: CommandOptions): Promise<void> {

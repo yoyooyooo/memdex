@@ -114,6 +114,19 @@ bun run memdex -- locate \
   "invoice export retry command"
 ```
 
+在轻量 Git worktree 中工作时，可以复用已 checkout 的 `main` worktree
+索引，避免给 feature worktree 单独上传：
+
+```bash
+bun run memdex -- ask \
+  --repo-worktree main \
+  "Where is retry/backfill documented?"
+```
+
+`--repo-worktree` 必须从某个 Git worktree 内运行。它只复用已记录索引，
+不会自动刷新；只有明确想更新目标分支 worktree 时才传 `--force-refresh`。
+如果目标分支没有 checkout 成 worktree，用 `--repo` 显式传入已索引路径。
+
 首次 broad upload 默认会被阻止。确认 source scope 后，用 `--yes` 显式批准：
 
 ```bash

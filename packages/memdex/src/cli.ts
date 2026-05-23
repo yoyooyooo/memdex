@@ -35,6 +35,7 @@ Common agent paths:
   memdex init --repo . --create-notebook
   memdex ask --repo . "Where is retry/backfill documented?"
   memdex locate --repo . "invoice export retry command"
+  memdex ask --repo-worktree main "question"
   memdex ask --repo . --yes "question"
 
 Command routing:
@@ -52,7 +53,8 @@ Command routing:
     .command("ask")
     .description("answer semantic project questions with freshness preflight")
     .argument("<question>", "natural-language question to ask over the source set")
-    .option("--repo <repo>", "project root", ".")
+    .option("--repo <repo>", "project root")
+    .option("--repo-worktree <branch>", "reuse a checked-out Git worktree branch without auto-refresh")
     .option("--yes", "approve first broad upload if setup is otherwise ready")
     .option("--force-refresh", "refresh managed sources before asking")
     .option("--json", "print machine-readable JSON")
@@ -63,7 +65,8 @@ Command routing:
     .command("locate")
     .description("find likely files or symbols and verify local line refs")
     .argument("<query>", "natural-language thing to find")
-    .option("--repo <repo>", "project root", ".")
+    .option("--repo <repo>", "project root")
+    .option("--repo-worktree <branch>", "reuse a checked-out Git worktree branch without auto-refresh")
     .option("--yes", "approve first broad upload if setup is otherwise ready")
     .option("--force-refresh", "refresh managed sources before locating")
     .option("--include-provider-answer", "include the raw provider answer in output")

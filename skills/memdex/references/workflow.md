@@ -173,6 +173,14 @@ memdex ask --repo . \
   "Which docs define retry and backoff behavior?"
 ```
 
+From a lightweight Git worktree, query the indexed `main` worktree without
+reinitializing or uploading the feature worktree:
+
+```bash
+memdex ask --repo-worktree main \
+  "Which docs define retry and backoff behavior?"
+```
+
 Plain output hides full freshness by default and prints only stale / blocked
 refresh warnings. `--json` always includes full `freshness`; `--verbose` prints
 freshness in plain output. For implementation claims, open local files before
@@ -195,6 +203,17 @@ Use `locate` when the user asks for code files, functions, tests, or line refs:
 memdex locate --repo . \
   "where is invoice export retry implemented?"
 ```
+
+```bash
+memdex locate --repo-worktree main \
+  "where is invoice export retry implemented?"
+```
+
+`--repo-worktree <branch>` resolves an already checked-out worktree for that
+branch from the current Git repository and reuses its recorded index without
+auto-refresh. Pass `--force-refresh` only when intentionally updating that
+indexed branch worktree. If cwd is not inside a Git worktree, or that branch has
+no worktree checkout, rerun with explicit `--repo`.
 
 Loop:
 
