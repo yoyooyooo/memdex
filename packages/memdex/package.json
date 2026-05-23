@@ -1,7 +1,7 @@
 {
   "name": "memdex",
   "version": "0.1.1",
-  "description": "Agent-facing semantic retrieval for local projects and source sets using NotebookLM, repomix snapshots, freshness checks, and local verification.",
+  "description": "Agent-facing semantic locator for local projects and source sets using NotebookLM, repomix snapshots, freshness checks, and local verification.",
   "type": "module",
   "license": "MIT",
   "homepage": "https://github.com/yoyooyooo/memdex#readme",

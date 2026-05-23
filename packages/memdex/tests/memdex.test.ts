@@ -25,7 +25,7 @@ describe("memdex ts cli", () => {
   test("commander help routes agents to primary commands", () => {
     const help = buildProgram().helpInformation();
 
-    expect(help).toContain("Agent-facing semantic retrieval");
+    expect(help).toContain("Agent-facing semantic locator");
     expect(help).toContain("NotebookLM as a semantic locator");
     expect(help).toContain("ask");
     expect(help).toContain("locate");

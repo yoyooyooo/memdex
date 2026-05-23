@@ -20,7 +20,7 @@ export function buildProgram(): Command {
     .name("memdex")
     .description(
       [
-        "Agent-facing semantic retrieval for projects and source sets.",
+        "Agent-facing semantic locator for projects and source sets.",
         "",
         "Memdex uses NotebookLM as a semantic locator, then treats local files,",
         "command output, and project docs as authority for exact evidence.",

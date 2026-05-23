@@ -1,6 +1,6 @@
 ---
 name: memdex
-description: Project-level semantic retrieval for local projects, vaults, repositories, and source sets using NotebookLM, repomix snapshots, freshness checks, and local evidence verification. Use when the user wants to initialize or refresh a semantic project index, ask architecture or implementation questions over a repo, locate files/functions/docs, or reuse an indexed Git worktree for search.
+description: Project-level semantic locator for local projects, vaults, repositories, and source sets using NotebookLM, repomix snapshots, freshness checks, and local evidence verification. Use when the user wants to initialize or refresh a semantic project index, ask architecture or implementation questions over a repo, locate files/functions/docs, or reuse an indexed Git worktree for search.
 ---
 
 # Memdex
