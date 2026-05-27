@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { buildProgram } from "../src/cli";
 import { buildBundleSet, planBundleChunks, repomixBaseArgv } from "../src/chunking";
 import { cmdAsk } from "../src/commands";
-import { defaultConfig, MemdexError, resetTestHooks, setTestHooks, writeJson, type RunResult } from "../src/common";
+import { defaultConfig, MemdexError, repoLock, resetTestHooks, setTestHooks, writeJson, type RunResult } from "../src/common";
 import { askProvider } from "../src/retrieval";
 import { uploadBundleSet } from "../src/notebooklm";
 
@@ -22,6 +22,20 @@ afterEach(() => {
 });
 
 describe("memdex ts cli", () => {
+  test("repoLock removes a stale lock whose pid is gone", async () => {
+    const repo = tempRepo();
+    try {
+      mkdirSync(join(repo, ".memdex"), { recursive: true });
+      writeFileSync(join(repo, ".memdex/.lock"), "pid=999999999\ncreatedAt=2000-01-01T00:00:00Z\n");
+
+      const result = await repoLock(repo, async () => "acquired", 0);
+
+      expect(result).toBe("acquired");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
   test("commander help routes agents to primary commands", () => {
     const help = buildProgram().helpInformation();
 

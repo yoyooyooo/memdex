@@ -146,6 +146,59 @@ export function uninitializedStatus(repo: string, configFile: string): JsonObjec
   };
 }
 
+type LockStat = ReturnType<typeof statSync>;
+
+function parseLockPid(content: string): number | null {
+  const match = content.match(/^pid=(\d+)$/m);
+  if (!match) return null;
+  const pid = Number(match[1]);
+  return Number.isSafeInteger(pid) && pid > 0 ? pid : null;
+}
+
+function processIsAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error: any) {
+    return error?.code !== "ESRCH";
+  }
+}
+
+function sameLockFile(left: LockStat, right: LockStat): boolean {
+  return left.dev === right.dev && left.ino === right.ino && left.size === right.size && left.mtimeMs === right.mtimeMs;
+}
+
+function removeStaleRepoLock(lockPath: string, timeoutSeconds: number): string | null {
+  let before: LockStat;
+  let content: string;
+  try {
+    before = statSync(lockPath);
+    content = readFileSync(lockPath, "utf8");
+  } catch (error: any) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+
+  const pid = parseLockPid(content);
+  let reason: string | null = null;
+  if (pid) {
+    if (!processIsAlive(pid)) reason = `stale lock pid ${pid} is not running`;
+  } else if ((Date.now() - before.mtimeMs) / 1000 > timeoutSeconds) {
+    reason = "stale lock has no valid pid";
+  }
+  if (!reason) return null;
+
+  try {
+    const current = statSync(lockPath);
+    if (!sameLockFile(before, current)) return null;
+    unlinkSync(lockPath);
+    return reason;
+  } catch (error: any) {
+    if (error?.code === "ENOENT") return reason;
+    throw error;
+  }
+}
+
 export async function repoLock<T>(repo: string, fn: () => Promise<T>, timeoutSeconds = 300): Promise<T> {
   const lockPath = join(repo, CONFIG_DIR, ".lock");
   mkdirSync(dirname(lockPath), { recursive: true });
@@ -157,6 +210,7 @@ export async function repoLock<T>(repo: string, fn: () => Promise<T>, timeoutSec
       writeFileSync(fd, `pid=${process.pid}\ncreatedAt=${iso()}\n`);
     } catch (error: any) {
       if (error?.code !== "EEXIST") throw error;
+      if (removeStaleRepoLock(lockPath, timeoutSeconds)) continue;
       if ((Date.now() - started) / 1000 > timeoutSeconds) die(`timed out waiting for lock: ${lockPath}`);
       await sleep(200);
     }
