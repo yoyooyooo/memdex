@@ -1,6 +1,6 @@
 {
   "name": "memdex",
-  "version": "0.1.1",
+  "version": "0.1.6",
   "description": "Agent-facing semantic locator for local projects and source sets using NotebookLM, repomix snapshots, freshness checks, and local verification.",
   "type": "module",
   "license": "MIT",
